@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Mapa PRO</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- ✅ Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- ✅ MarkerCluster -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+  <!-- ✅ Iconos -->
+  <link rel="stylesheet" href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+
+  <style>
+    :root{
+      --brand:#0078D7;
+      --brand-2:#2196F3;
+      --text:#102a43;
+      --muted:#234;
+      --panel-bg: rgba(255,255,255,.78);
+      --panel-border: rgba(0,0,0,.06);
+      --shadow: 0 10px 30px rgba(0,0,0,.18);
+      --radius: 18px;
+      --field-border:#cfcfcf;
+      --focus-ring: rgba(33,150,243,.15);
+      --count-bg:#f3f9ff;
+      --count-br:#e0efff;
+      --count-tx:#0b2f4a;
+      --panel-hover-translate:-1px;
+      --map-ctrl-bg:#fff;
+      --map-ctrl-tx:#000;
+      --map-ctrl-br:rgba(0,0,0,.2);
+    }
+    /* 🌙 Dark theme overrides */
+    body.dark{
+      --text:#e6edf3;
+      --muted:#c9d1d9;
+      --panel-bg: rgba(17,25,40,.72);
+      --panel-border: rgba(255,255,255,.06);
+      --shadow: 0 10px 30px rgba(0,0,0,.5);
+      --field-border:#3b4757;
+      --focus-ring: rgba(56,189,248,.25);
+      --count-bg:#0b1220;
+      --count-br:#1e293b;
+      --count-tx:#cfe8ff;
+      --map-ctrl-bg:#0f172a;
+      --map-ctrl-tx:#e2e8f0;
+      --map-ctrl-br:rgba(255,255,255,.18);
+    }
+
+    html, body { margin:0; height:100%; }
+    #map { height:100%; width:100%; }
+
+    /* Paneles (glass) */
+    .panel{
+      position: absolute;
+      z-index: 999;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 16px 16px 14px;
+      border-radius: var(--radius);
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      color: var(--text);
+      box-shadow: var(--shadow);
+      transition: box-shadow .2s ease, transform .2s ease;
+    }
+    .panel:hover{ transform: translateY(var(--panel-hover-translate)); }
+
+    .search{ top:16px; right:16px; width: min(320px, 85vw); }
+    .filters{ top:16px; left:16px; width: min(300px, 85vw); }
+    .legend{ bottom:16px; left:16px; width: min(260px, 80vw); }
+
+    h3{
+      margin: 0 0 12px;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: .2px;
+      color: var(--text);
+      display:flex; gap:8px; align-items:center; justify-content:space-between;
+    }
+    .h3-left{ display:flex; align-items:center; gap:8px; }
+
+    .icon-btn{
+      background: transparent;
+      border: 1px solid var(--panel-border);
+      color: var(--text);
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display:grid; place-items:center;
+      cursor:pointer;
+      transition: background .15s ease, transform .12s ease, border-color .15s ease;
+    }
+    .icon-btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.08); }
+
+    .input-row{ display:flex; gap:8px; }
+    .input-row > * { flex:1; }
+
+    label{ font-size:13px; color:var(--muted); display:block; margin: 6px 0 6px; }
+
+    input, select{
+      width:100%; padding:12px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--field-border);
+      background: #fff;
+      outline: none;
+      font-size: 14px;
+      transition: border-color .15s ease, box-shadow .15s ease, background .15s ease, color .15s ease;
+    }
+    body.dark input, body.dark select{ background:#0b1220; color:var(--text); }
+
+    input:focus, select:focus{
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px var(--focus-ring);
+    }
+
+    button{
+      width: 100%;
+      padding: 12px;
+      border: none;
+      background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      color: white;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+    }
+    button:hover{ transform: translateY(-1px); box-shadow: 0 8px 18px rgba(33,150,243,.35); }
+    button:active{ transform: translateY(0); opacity: .9; }
+
+    .btn-secondary{
+      background: #e9f3ff;
+      color: #0a4a85;
+      border: 1px solid #cfe5ff;
+    }
+    body.dark .btn-secondary{
+      background:#0b1220; color:#cfe8ff; border-color:#1e293b;
+    }
+    .btn-row{ display:flex; gap:8px; }
+
+    .dot{ width:14px; height:14px; border-radius:50%; display:inline-block; margin-right:8px; border:2px solid rgba(0,0,0,.1); }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 8px 10px; border-radius: 999px; border:1px solid var(--panel-border); background:transparent; margin: 4px 0; color:var(--text);
+    }
+
+    /* Popup más legible */
+    .leaflet-popup-content{
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      line-height: 1.35;
+      color:#123;
+      padding: 2px 0;
+      font-size: 13.5px;
+    }
+    body.dark .leaflet-popup-content{ color:#e6edf3; }
+    .popup-title{
+      font-weight:800; color:#0b2f4a; font-size:15px; margin-bottom: 3px;
+    }
+    body.dark .popup-title{ color:#cfe8ff; }
+    .popup-meta{ color:#345; }
+    body.dark .popup-meta{ color:#b8c4d3; }
+    .popup-badge{
+      display:inline-block; padding:3px 8px; border-radius:999px; font-size:12px; font-weight:700; color:#fff;
+    }
+
+    /* Contador */
+    .count{
+      font-size:13px; margin-top:8px;
+      color:var(--count-tx); background:var(--count-bg); border:1px solid var(--count-br);
+      padding:8px 10px; border-radius:10px;
+    }
+
+    /* Leaflet controles en oscuro */
+    .leaflet-control-zoom a,
+    .leaflet-bar a{
+      background: var(--map-ctrl-bg);
+      color: var(--map-ctrl-tx);
+      border-bottom: 1px solid var(--map-ctrl-br);
+    }
+    .leaflet-bar a:last-child{ border-bottom:none; }
+    .leaflet-control-attribution{
+      background: var(--panel-bg);
+      color: var(--text);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 0 6px;
+    }
+
+    /* Responsivo */
+    @media (max-width: 640px){
+      .filters{ top:auto; bottom:16px; left:16px; right:16px; width:auto; }
+      .legend{ display:none; }
+      .search{ left:16px; right:16px; width:auto; }
+      .btn-row{ flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div id="map" role="application" aria-label="Mapa interactivo de clientes"></div>
+
+  <!-- PANEL BUSCAR -->
+  <div class="panel search" aria-label="Panel de búsqueda">
+    <h3>
+      <span class="h3-left"><i class="bi bi-search"></i> Buscar</span>
+      <!-- Botón de tema -->
+      <button class="icon-btn" id="themeToggle" title="Cambiar tema claro/oscuro">
+        <i id="themeIcon" class="bi bi-moon"></i>
+      </button>
+    </h3>
+    <div class="input-row" style="margin-bottom:8px;">
+      <input id="q" placeholder="Nombre de tienda o suministro..." aria-label="Buscar por nombre o suministro" autofocus />
+    </div>
+    <div class="btn-row">
+      <button id="btnBuscar" title="Buscar (Enter)">Buscar</button>
+      <button id="btnLimpiar" class="btn-secondary" title="Limpiar búsqueda">Limpiar</button>
+    </div>
+  </div>
+
+  <!-- PANEL FILTROS -->
+  <div class="panel filters" aria-label="Panel de filtros">
+    <h3><span class="h3-left"><i class="bi bi-sliders"></i> Filtros</span></h3>
+
+    <label for="fDist">Distrito</label>
+    <select id="fDist" aria-label="Filtrar por distrito">
+      <option value="all">Todos</option>
+    </select>
+
+    <label style="margin-top:10px;">Cadena</label>
+    <label class="pill"><input type="checkbox" id="sp" checked> <span class="dot" style="background:#E74C3C"></span> Supermercados Peruanos</label>
+    <label class="pill"><input type="checkbox" id="cen" checked> <span class="dot" style="background:#3498DB"></span> Cencosud</label>
+    <label class="pill"><input type="checkbox" id="tot" checked> <span class="dot" style="background:#27AE60"></span> Tottus</label>
+    <label class="pill"><input type="checkbox" id="unk" checked> <span class="dot" style="background:#7F8C8D"></span> Otros</label>
+
+    <div id="count" class="count" aria-live="polite"></div>
+  </div>
+
+  <!-- PANEL LEYENDA -->
+  <div class="panel legend" aria-label="Leyenda de colores">
+    <h3><span class="h3-left"><i class="bi bi-info-circle"></i> Leyenda</span></h3>
+    <p><span class="dot" style="background:#E74C3C"></span>Supermercados Peruanos</p>
+    <p><span class="dot" style="background:#3498DB"></span>Cencosud</p>
+    <p><span class="dot" style="background:#27AE60"></span>Tottus</p>
+    <p><span class="dot" style="background:#7F8C8D"></span>No especificado</p>
+  </div>
+
+  <script>
+    // ========== Datos de ejemplo ==========
+    const stores = [
+      { name:'PLAZA VEA HIGUERETA', client:'SUPERMERCADOS PERUANOS SA', district:'SANTIAGO DE SURCO', canal:'MOD', lat:-12.127533, lng:-77.000916, sumin:'0374' },
+      { name:'WONG SAN MIGUEL', client:'CENCOSUD RETAIL PERU SA', district:'SAN MIGUEL', canal:'MOD', lat:-12.077400, lng:-77.083182, sumin:'0374' },
+      { name:'TOTTUS INDEPENDENCIA', client:'HIPERMERCADOS TOTTUS SA', district:'INDEPENDENCIA', canal:'MOD', lat:-11.987407, lng:-77.064203, sumin:'0374' }
+    ];
+
+    const COLORS = {
+      'SUPERMERCADOS PERUANOS SA':'#E74C3C',
+      'CENCOSUD RETAIL PERU SA':'#3498DB',
+      'HIPERMERCADOS TOTTUS SA':'#27AE60',
+      'NO ESPECIFICADO':'#7F8C8D'
+    };
+
+    // ========== Tema (persistente) ==========
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    let theme = localStorage.getItem('theme') || (prefersDark ? 'dark' : 'light');
+    const applyThemeToBody = () => {
+      document.body.classList.toggle('dark', theme === 'dark');
+      const icon = document.getElementById('themeIcon');
+      if (icon) icon.className = theme === 'dark' ? 'bi bi-sun' : 'bi bi-moon';
+    };
+    applyThemeToBody();
+
+    // ========== Mapa base (claro/oscuro) ==========
+    const map = L.map('map').setView([-12.05, -77.05], 11);
+
+    const lightLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+      attribution: "© OpenStreetMap • © CARTO"
+    });
+    const darkLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      attribution: "© OpenStreetMap • © CARTO"
+    });
+
+    if (theme === 'dark') { darkLayer.addTo(map); } else { lightLayer.addTo(map); }
+
+    // Cluster
+    const cluster = L.markerClusterGroup();
+    map.addLayer(cluster);
+
+    // ========== UI: distritos ==========
+    const selDist = document.getElementById('fDist');
+    [...new Set(stores.map(s => s.district))].sort().forEach(d => {
+      const o = document.createElement("option");
+      o.value = d; o.textContent = d; selDist.appendChild(o);
+    });
+
+    // ========== Icono PIN SVG ==========
+    const pinSvg = (color = '#E74C3C') => {
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="38" viewBox="0 0 26 38">
+          <defs>
+            <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.25"/>
+            </filter>
+          </defs>
+          <g filter="url(#shadow)">
+            <path d="M13 0C5.82 0 0 5.82 0 13c0 9.75 13 25 13 25s13-15.25 13-25C26 5.82 20.18 0 13 0z" fill="${color}"/>
+            <circle cx="13" cy="13" r="5.5" fill="white" fill-opacity="0.9"/>
+          </g>
+        </svg>`;
+      return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+    };
+    const makePinIcon = (color) => L.icon({
+      iconUrl: pinSvg(color),
+      iconSize: [26, 38],
+      iconAnchor: [13, 38],
+      popupAnchor: [0, -30],
+      className: ''
+    });
+
+    // ========== Crear marcadores ==========
+    const puntos = [];
+    stores.forEach(s => {
+      const col = COLORS[s.client] || COLORS['NO ESPECIFICADO'];
+
+      const mk = L.marker([s.lat, s.lng], {
+        icon: makePinIcon(col)
+      });
+
+      const popupHtml = `
+        <div class="popup-title">${s.name}</div>
+        <div class="popup-meta">
+          <span class="popup-badge" style="background:${col}">${s.client.split(' ')[0]}</span>
+        </div>
+        <div class="popup-meta" style="margin-top:6px">
+          <b>Distrito:</b> ${s.district}<br>
+          <b>Suministro:</b> ${s.sumin}
+        </div>
+      `;
+      mk.bindPopup(popupHtml);
+      puntos.push({ marker: mk, store: s });
+    });
+
+    // ========== Filtros ==========
+    function aplicar() {
+      cluster.clearLayers();
+
+      const dist = selDist.value;
+      const sp  = document.getElementById("sp").checked;
+      const cen = document.getElementById("cen").checked;
+      const tot = document.getElementById("tot").checked;
+      const unk = document.getElementById("unk").checked;
+
+      const visibles = [];
+      puntos.forEach(p => {
+        const c = p.store.client || '';
+        const isSP  = c.includes("PERUANOS");
+        const isCEN = c.includes("CENCOSUD");
+        const isTOT = c.includes("TOTTUS");
+        const isUNK = (!isSP && !isCEN && !isTOT);
+
+        const okCadena =
+          (isSP  && sp) ||
+          (isCEN && cen) ||
+          (isTOT && tot) ||
+          (isUNK && unk);
+
+        const okDist = (dist === "all") || (p.store.district === dist);
+
+        if (okCadena && okDist) visibles.push(p.marker);
+      });
+
+      cluster.addLayers(visibles);
+
+      const count = document.getElementById("count");
+      count.textContent = `${visibles.length} tienda${visibles.length === 1 ? '' : 's'} visible${visibles.length === 1 ? '' : 's'}`;
+
+      if (visibles.length) {
+        const g = L.featureGroup(visibles);
+        map.fitBounds(g.getBounds().pad(0.2));
+      }
+    }
+    aplicar();
+
+    ["sp","cen","tot","unk","fDist"].forEach(id => {
+      document.getElementById(id).addEventListener("change", aplicar);
+    });
+
+    // ========== Buscar ==========
+    function buscar() {
+      const q = document.getElementById("q").value.toLowerCase().trim();
+      if (!q) return;
+      const hit = puntos.find(p =>
+        p.store.name.toLowerCase().includes(q) ||
+        (p.store.sumin && p.store.sumin.includes(q))
+      );
+      if (hit) {
+        map.setView(hit.marker.getLatLng(), 15);
+        hit.marker.openPopup();
+      } else {
+        alert("No encontrado.");
+      }
+    }
+    function limpiarBusqueda(){
+      const input = document.getElementById("q");
+      input.value = "";
+      input.focus();
+    }
+    document.getElementById("btnBuscar").addEventListener("click", buscar);
+    document.getElementById("btnLimpiar").addEventListener("click", limpiarBusqueda);
+    document.getElementById("q").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") buscar();
+    });
+
+    // ========== Toggle de tema ==========
+    function setTheme(next) {
+      theme = next;
+      localStorage.setItem('theme', theme);
+      applyThemeToBody();
+
+      // Cambiar capa base
+      if (theme === 'dark') {
+        if (map.hasLayer(lightLayer)) map.removeLayer(lightLayer);
+        if (!map.hasLayer(darkLayer)) darkLayer.addTo(map);
+      } else {
+        if (map.hasLayer(darkLayer)) map.removeLayer(darkLayer);
+        if (!map.hasLayer(lightLayer)) lightLayer.addTo(map);
+      }
+    }
+
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      setTheme(theme === 'dark' ? 'light' : 'dark');
+    });
+  </script>
+</body>
+</html>
+``
