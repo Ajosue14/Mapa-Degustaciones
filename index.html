@@ -5,90 +5,60 @@
   <title>Mapa PRO</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- ✅ Leaflet -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
 
-  <!-- MarkerCluster -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <!-- ✅ MarkerCluster -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
+  />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
+  />
+  <script
+    src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"
+  ></script>
 
-  <!-- Bootstrap Icons -->
-  <link rel="stylesheet" href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+  <!-- ✅ Iconos -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+  />
 
   <style>
-    /* ================= ESTILOS GENERALES ================= */
     :root{
-      --brand:#0078D7;
-      --brand-2:#2196F3;
-      --text:#102a43;
-      --panel-bg: rgba(255,255,255,.78);
-      --panel-border: rgba(0,0,0,.06);
-      --shadow: 0 10px 30px rgba(0,0,0,.18);
+      --brand:#0078D7; --brand-2:#2196F3;
+      --text:#102a43;  --panel-bg: rgba(255,255,255,.78);
+      --panel-border: rgba(0,0,0,.06); --shadow: 0 10px 30px rgba(0,0,0,.18);
     }
-
-    body.dark{
-      --text:#e6edf3;
-      --panel-bg: rgba(17,25,40,.72);
-      --panel-border: rgba(255,255,255,.06);
-      --shadow: 0 10px 30px rgba(0,0,0,.5);
-    }
-
+    body.dark{ --text:#e6edf3; --panel-bg: rgba(17,25,40,.72); --panel-border: rgba(255,255,255,.06); --shadow:0 10px 30px rgba(0,0,0,.5); }
     html, body{ margin:0; height:100%; }
     #map{ width:100%; height:100%; }
 
-    .panel{
-      position:absolute;
-      z-index:999;
-      background: var(--panel-bg);
-      border:1px solid var(--panel-border);
-      backdrop-filter: blur(12px);
-      padding:16px;
-      border-radius:18px;
-      font-family:"Segoe UI",sans-serif;
-      color:var(--text);
-      box-shadow: var(--shadow);
-    }
-
+    .panel{ position:absolute; z-index:999; background:var(--panel-bg); border:1px solid var(--panel-border);
+      backdrop-filter: blur(12px); padding:16px; border-radius:18px; font-family:"Segoe UI",sans-serif;
+      color:var(--text); box-shadow: var(--shadow); }
     .search{ top:16px; right:16px; width:300px; }
     .filters{ top:16px; left:16px; width:260px; }
     .legend{ bottom:16px; left:16px; width:260px; }
 
-    button{
-      width:100%;
-      padding:12px;
-      background:linear-gradient(135deg,var(--brand),var(--brand-2));
-      color:white;
-      border:none;
-      border-radius:10px;
-      font-weight:bold;
-      cursor:pointer;
-      margin-top:8px;
-    }
-
-    .icon-btn{
-      border:none;
-      background:transparent;
-      font-size:20px;
-      cursor:pointer;
-      color:var(--text);
-    }
-
-    input,select{
-      width:100%;
-      padding:10px;
-      border-radius:10px;
-      border:1px solid #ccc;
-      margin-top:8px;
-    }
-
-    .dot{
-      width:14px; height:14px;
-      border-radius:50%;
-      display:inline-block;
-      margin-right:6px;
-    }
+    button{ width:100%; padding:12px; background:linear-gradient(135deg,var(--brand),var(--brand-2));
+      color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer; margin-top:8px; }
+    .icon-btn{ border:none; background:transparent; font-size:20px; cursor:pointer; color:var(--text); }
+    input,select{ width:100%; padding:10px; border-radius:10px; border:1px solid #ccc; margin-top:8px; }
+    .dot{ width:14px; height:14px; border-radius:50%; display:inline-block; margin-right:6px; }
   </style>
 </head>
 
@@ -101,7 +71,6 @@
       <i class="bi bi-search"></i> Buscar
       <button class="icon-btn" id="themeToggle"><i id="themeIcon" class="bi bi-moon"></i></button>
     </h3>
-
     <input id="q" placeholder="Nombre o suministro" />
     <button id="btnBuscar">Buscar</button>
     <button id="btnLimpiar" style="background:#eee;color:#333;">Limpiar</button>
@@ -110,7 +79,6 @@
   <!-- PANEL FILTROS -->
   <div class="panel filters">
     <h3><i class="bi bi-sliders"></i> Filtros</h3>
-
     <label>Distrito</label>
     <select id="fDist"><option value="all">Todos</option></select>
 
@@ -133,36 +101,32 @@
     <p><span class="dot" style="background:#7F8C8D"></span>Otros</p>
   </div>
 
-
 <script>
-/* ================== TEMA ================== */
+/* ====== TEMA ====== */
 const prefersDark = window.matchMedia("(prefers-color-scheme:dark)").matches;
 let theme = localStorage.getItem("theme") || (prefersDark ? "dark" : "light");
 applyTheme();
-
 function applyTheme(){
   document.body.classList.toggle("dark", theme==="dark");
-  document.getElementById("themeIcon").className = theme==="dark" ? "bi bi-sun" : "bi bi-moon";
+  const i = document.getElementById("themeIcon");
+  if(i) i.className = theme==="dark" ? "bi bi-sun" : "bi bi-moon";
 }
-
 document.getElementById("themeToggle").onclick = ()=>{
   theme = theme==="dark" ? "light" : "dark";
   localStorage.setItem("theme", theme);
   applyTheme();
 };
 
-/* ================== MAPA ================== */
+/* ====== MAPA ====== */
 const map = L.map("map").setView([-12.05,-77.05], 11);
-
-const lightLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png");
-const darkLayer  = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png");
-
+const lightLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", { attribution:"© OpenStreetMap • © CARTO" });
+const darkLayer  = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { attribution:"© OpenStreetMap • © CARTO" });
 (theme==="dark" ? darkLayer : lightLayer).addTo(map);
 
 const cluster = L.markerClusterGroup();
 map.addLayer(cluster);
 
-/* ================== COLORES ================== */
+/* ====== COLORES ====== */
 const COLORS = {
   "SUPERMERCADOS PERUANOS": "#E74C3C",
   "CENCOSUD": "#3498DB",
@@ -181,33 +145,29 @@ function pinSvg(color){
   </svg>`;
   return "data:image/svg+xml;charset=UTF-8,"+encodeURIComponent(svg);
 }
-
 function icon(color){
-  return L.icon({
-    iconUrl: pinSvg(color),
-    iconSize:[26,38],
-    iconAnchor:[13,38],
-    popupAnchor:[0,-30]
-  });
+  return L.icon({ iconUrl: pinSvg(color), iconSize:[26,38], iconAnchor:[13,38], popupAnchor:[0,-30] });
 }
 
-/* ================== CARGAR TIENDAS ================== */
+/* ====== CARGA DE TIENDAS ====== */
 let stores=[];
 let puntos=[];
 
 async function cargarDatos(){
-  const r = await fetch("tiendas.json",{cache:"no-store"});
+  // Si falla, verás el error en Consola
+  const r = await fetch("tiendas.json", { cache: "no-store" });
   stores = await r.json();
 
+  // Distritos
   const sel = document.getElementById("fDist");
-  const districts = [...new Set(stores.map(s=>s.district))].sort();
+  const districts = [...new Set(stores.map(s=>s.district))].filter(Boolean).sort();
   sel.innerHTML = `<option value='all'>Todos</option>` + districts.map(d=>`<option>${d}</option>`).join("");
 
+  // Marcadores
   puntos=[];
   stores.forEach(s=>{
     const col = COLORS[s.client] || COLORS["NO ESPECIFICADO"];
     const mk = L.marker([s.lat,s.lng],{icon:icon(col)});
-
     mk.bindPopup(`
       <b>${s.name}</b><br>
       <b>Cliente:</b> ${s.client}<br>
@@ -215,18 +175,19 @@ async function cargarDatos(){
       <b>Suministro:</b> ${s.sumin}
     `);
 
-    let filterGroup=s.client;
-    if(filterGroup==="METRO") filterGroup="CENCOSUD";
-    if(filterGroup==="VIVANDA") filterGroup="SUPERMERCADOS PERUANOS";
+    // Agrupación en filtros:
+    let group = s.client;
+    if(group==="METRO") group="CENCOSUD";
+    if(group==="VIVANDA") group="SUPERMERCADOS PERUANOS";
 
-    puntos.push({marker:mk,store:s,group:filterGroup});
+    puntos.push({marker:mk,store:s,group});
   });
 
   aplicar();
 }
 cargarDatos();
 
-/* ================== FILTROS ================== */
+/* ====== FILTROS ====== */
 function aplicar(){
   cluster.clearLayers();
 
@@ -236,7 +197,7 @@ function aplicar(){
   const tot= document.getElementById("tot").checked;
   const unk= document.getElementById("unk").checked;
 
-  let visibles=[];
+  const visibles=[];
   puntos.forEach(p=>{
     const okDist = dist==="all" || p.store.district===dist;
     const okCad =
@@ -257,14 +218,14 @@ function aplicar(){
   }
 }
 
-/* ================== BUSCAR ================== */
+/* ====== BUSCAR ====== */
 function buscar(){
   const q = document.getElementById("q").value.toLowerCase().trim();
   if(!q) return;
 
   const hit = puntos.find(p =>
-    p.store.name.toLowerCase().includes(q) ||
-    p.store.sumin.includes(q)
+    (p.store.name && p.store.name.toLowerCase().includes(q)) ||
+    (p.store.sumin && p.store.sumin.includes(q))
   );
 
   if(hit){
@@ -274,17 +235,10 @@ function buscar(){
     alert("No encontrado");
   }
 }
-
 document.getElementById("btnBuscar").onclick = buscar;
-document.getElementById("btnLimpiar").onclick = ()=>{
-  document.getElementById("q").value="";
-};
-
-document.getElementById("q").addEventListener("keydown", e=>{
-  if(e.key==="Enter") buscar();
-});
+document.getElementById("btnLimpiar").onclick = ()=>{ document.getElementById("q").value=""; };
+document.getElementById("q").addEventListener("keydown", e=>{ if(e.key==="Enter") buscar(); });
 </script>
 
 </body>
 </html>
-``
