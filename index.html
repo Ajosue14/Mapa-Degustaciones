@@ -1,15 +1,5 @@
 <!DOCTYPE html>
-<html lang="();<html lang="es">
-  }else{
-    alert("No encontrado");
-  }
-}
-document.getElementById("btnBuscar").onclick=buscar;
-document.getElementById("btnLimpiar").onclick=()=>{document.getElementById("q").value="";};
-
-</script>
-</body>
-</html>
+<html lang="es">
 <head>
   <meta charset="utf-8" />
   <title>Mapa PRO</title>
@@ -65,7 +55,6 @@ document.getElementById("btnLimpiar").onclick=()=>{document.getElementById("q").
     .icon-btn{ border:none; background:transparent; font-size:20px; cursor:pointer; color:var(--text); }
     input,select{ width:100%; padding:10px; border-radius:10px; border:1px solid #ccc; margin-top:8px; }
     .dot{ width:14px; height:14px; border-radius:50%; display:inline-block; margin-right:6px; }
-
   </style>
 </head>
 
@@ -126,9 +115,7 @@ document.getElementById("themeToggle").onclick = ()=>{
 
 /* ==================== MAPA ==================== */
 const map = L.map("map").setView([-12.05,-77.05], 11);
-const lightLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png").addTo(map);
-const darkLayer  = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png");
-
+L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png").addTo(map);
 const cluster = L.markerClusterGroup();
 map.addLayer(cluster);
 
@@ -142,13 +129,13 @@ const COLORS = {
   "NO ESPECIFICADO": "#7F8C8D"
 };
 
-/* ==================== ICONO PIN ==================== */
+/* ==================== PIN ==================== */
 function pinSvg(color){
   return "data:image/svg+xml;utf8," + encodeURIComponent(`
-  <svg xmlns='http://www.w3.org/2000/svg' width='26' height='38'>
-    <path d='M13 0C5.8 0 0 5.8 0 13c0 10 13 25 13 25s13-15 13-25C26 5.8 20.2 0 13 0z' fill='${color}'/>
-    <circle cx='13' cy='13' r='6' fill='white'/>
-  </svg>`);
+    <svg xmlns='http://www.w3.org/2000/svg' width='26' height='38'>
+      <path d='M13 0C5.8 0 0 5.8 0 13c0 10 13 25 13 25s13-15 13-25C26 5.8 20.2 0 13 0z' fill='${color}'/>
+      <circle cx='13' cy='13' r='6' fill='white'/>
+    </svg>`);
 }
 function icon(color){
   return L.icon({
@@ -162,29 +149,29 @@ function icon(color){
 /* ==================== LECTURA CSV ==================== */
 let stores=[], puntos=[];
 
-function detectarCliente(nombre){
-  const n = (nombre || "").toUpperCase();
-  if(n.includes("TOTTUS")) return "TOTTUS";
-  if(n.includes("METRO")) return "METRO";
-  if(n.includes("VIVANDA")) return "VIVANDA";
-  if(n.includes("WONG")) return "CENCOSUD";
-  if(n.includes("PLAZA VEA") || n.includes("SUPER VEA")) return "SUPERMERCADOS PERUANOS";
+function detectarCliente(n){
+  const t = (n||"").toUpperCase();
+  if(t.includes("TOTTUS")) return "TOTTUS";
+  if(t.includes("METRO")) return "METRO";
+  if(t.includes("VIVANDA")) return "VIVANDA";
+  if(t.includes("WONG")) return "CENCOSUD";
+  if(t.includes("PLAZA VEA")||t.includes("SUPER VEA"))
+    return "SUPERMERCADOS PERUANOS";
   return "NO ESPECIFICADO";
 }
 
-Papa.parse("tiendas.csv", {
-  download: true,
-  header: true,
-  dynamicTyping: true,
-  skipEmptyLines: true,
-  complete: function(res){
-    stores = res.data.map(s => ({
-      name: `${s.Nombre} (${s.Cliente})`,
-      client: detectarCliente(s.Nombre),
-      district: s.DISTRITO,
-      lat: parseFloat(s.Latitud),
-      lng: parseFloat(s.Longitud),
-      sumin: String(s["C.Sumin"]).padStart(4,"0")
+Papa.parse("tiendas.csv",{
+  download:true,
+  header:true,
+  dynamicTyping:true,
+  complete:function(r){
+    stores = r.data.map(s=>({
+      name:`${s.Nombre} (${s.Cliente})`,
+      client:detectarCliente(s.Nombre),
+      district:s.DISTRITO,
+      lat:parseFloat(s.Latitud),
+      lng:parseFloat(s.Longitud),
+      sumin:String(s["C.Sumin"]).padStart(4,"0")
     })).filter(s=>!isNaN(s.lat)&&!isNaN(s.lng));
 
     cargarPuntos();
@@ -192,15 +179,13 @@ Papa.parse("tiendas.csv", {
 });
 
 function cargarPuntos(){
-
-  // Distritos
-  const sel=document.getElementById("fDist");
-  const dists=[...new Set(stores.map(s=>s.district))].sort();
-  sel.innerHTML=`<option value='all'>Todos</option>`+dists.map(d=>`<option>${d}</option>`).join("");
+  const sel = document.getElementById("fDist");
+  const d = [...new Set(stores.map(s=>s.district))].sort();
+  sel.innerHTML=`<option value='all'>Todos</option>` + d.map(x=>`<option>${x}</option>`).join("");
 
   puntos=[];
   stores.forEach(s=>{
-    const col = COLORS[s.client];
+    const col=COLORS[s.client];
     const mk=L.marker([s.lat,s.lng],{icon:icon(col)});
     mk.bindPopup(
       `<b>${s.name}</b><br>
@@ -209,20 +194,17 @@ function cargarPuntos(){
       Suministro: ${s.sumin}`
     );
 
-    let group=s.client;
-    if(group==="METRO") group="CENCOSUD";
-    if(group==="VIVANDA") group="SUPERMERCADOS PERUANOS";
-
-    puntos.push({marker:mk,store:s,group});
+    let g=s.client;
+    if(g==="METRO") g="CENCOSUD";
+    if(g==="VIVANDA") g="SUPERMERCADOS PERUANOS";
+    puntos.push({marker:mk,store:s,group:g});
   });
 
   aplicar();
 }
 
-/* ==================== FILTROS ==================== */
 function aplicar(){
   cluster.clearLayers();
-
   const dist=document.getElementById("fDist").value;
   const sp=document.getElementById("sp").checked;
   const cen=document.getElementById("cen").checked;
@@ -240,7 +222,8 @@ function aplicar(){
   }).map(p=>p.marker);
 
   cluster.addLayers(visibles);
-  document.getElementById("count").innerText = `${visibles.length} tiendas visibles`;
+  document.getElementById("count").innerText=
+    `${visibles.length} tiendas visibles`;
 
   if(visibles.length){
     const g=L.featureGroup(visibles);
@@ -249,12 +232,21 @@ function aplicar(){
 }
 
 /* ==================== BUSCAR ==================== */
-function buscar(){
+document.getElementById("btnBuscar").onclick=()=>{
   const q=document.getElementById("q").value.toLowerCase().trim();
-  if(!q) return;
-  const hit=puntos.find(p =>
-    p.store.name.toLowerCase().includes(q) ||
+  const hit=puntos.find(p=>
+    p.store.name.toLowerCase().includes(q)||
     p.store.sumin.includes(q)
   );
   if(hit){
     map.setView(hit.marker.getLatLng(),15);
+    hit.marker.openPopup();
+  }else alert("No encontrado");
+};
+document.getElementById("btnLimpiar").onclick=()=>{
+  document.getElementById("q").value="";
+};
+
+</script>
+</body>
+</html>
