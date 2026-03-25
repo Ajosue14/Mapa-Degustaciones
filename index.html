@@ -1,52 +1,38 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="();<html lang="es">
+  }else{
+    alert("No encontrado");
+  }
+}
+document.getElementById("btnBuscar").onclick=buscar;
+document.getElementById("btnLimpiar").onclick=()=>{document.getElementById("q").value="";};
+
+</script>
+</body>
+</html>
 <head>
   <meta charset="utf-8" />
   <title>Mapa PRO</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- ✅ Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin="anonymous"
-  />
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
-  <!-- ✅ Leaflet JS -->
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin="anonymous"
-  ></script>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- ✅ MarkerCluster CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
-  />
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
-  />
+  <!-- MarkerCluster CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
 
-  <!-- ✅ MarkerCluster JS -->
-  <script
-    src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"
-  ></script>
+  <!-- MarkerCluster JS -->
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
-  <!-- ✅ Bootstrap Icons -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
-  />
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
-  <!-- ✅ PapaParse (leer CSV) -->
-  <script
-    src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"
-    integrity="sha384-Ol2cJ3YgV8UeN3oHvh6qYv0X4h1L9LxJk1pYzZy6aHqFh5tFXn0GmV0wP6rXNV1l"
-    crossorigin="anonymous"
-  ></script>
+  <!-- PapaParse -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
   <style>
     :root{
@@ -80,19 +66,6 @@
     input,select{ width:100%; padding:10px; border-radius:10px; border:1px solid #ccc; margin-top:8px; }
     .dot{ width:14px; height:14px; border-radius:50%; display:inline-block; margin-right:6px; }
 
-    /* Ajustes mínimos para controles Leaflet en oscuro */
-    .leaflet-control-zoom a,
-    .leaflet-bar a{
-      background: #fff;
-      color: #000;
-      border-bottom: 1px solid rgba(0,0,0,.2);
-    }
-    body.dark .leaflet-control-zoom a,
-    body.dark .leaflet-bar a{
-      background: #0f172a;
-      color: #e2e8f0;
-      border-bottom-color: rgba(255,255,255,.18);
-    }
   </style>
 </head>
 
@@ -142,8 +115,8 @@ let theme = localStorage.getItem("theme") || (prefersDark ? "dark" : "light");
 applyTheme();
 function applyTheme(){
   document.body.classList.toggle("dark", theme==="dark");
-  const i = document.getElementById("themeIcon");
-  if(i) i.className = theme==="dark" ? "bi bi-sun" : "bi bi-moon";
+  document.getElementById("themeIcon").className =
+    theme==="dark" ? "bi bi-sun" : "bi bi-moon";
 }
 document.getElementById("themeToggle").onclick = ()=>{
   theme = theme==="dark" ? "light" : "dark";
@@ -153,39 +126,41 @@ document.getElementById("themeToggle").onclick = ()=>{
 
 /* ==================== MAPA ==================== */
 const map = L.map("map").setView([-12.05,-77.05], 11);
-const lightLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", { attribution:"© OpenStreetMap • © CARTO" });
-const darkLayer  = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { attribution:"© OpenStreetMap • © CARTO" });
-(theme==="dark" ? darkLayer : lightLayer).addTo(map);
+const lightLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png").addTo(map);
+const darkLayer  = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png");
 
 const cluster = L.markerClusterGroup();
 map.addLayer(cluster);
 
 /* ==================== COLORES ==================== */
 const COLORS = {
-  "SUPERMERCADOS PERUANOS": "#E74C3C", // rojo
-  "CENCOSUD": "#3498DB",               // azul
-  "TOTTUS": "#27AE60",                 // verde
-  "METRO": "#F1C40F",                  // amarillo
-  "VIVANDA": "#E67E22",                // naranja
-  "NO ESPECIFICADO": "#7F8C8D"         // gris
+  "SUPERMERCADOS PERUANOS": "#E74C3C",
+  "CENCOSUD": "#3498DB",
+  "TOTTUS": "#27AE60",
+  "METRO": "#F1C40F",
+  "VIVANDA": "#E67E22",
+  "NO ESPECIFICADO": "#7F8C8D"
 };
 
 /* ==================== ICONO PIN ==================== */
 function pinSvg(color){
-  const svg = `
-  <svg xmlns="http://www.w3.org/2000/svg" width="26" height="38" viewBox="0 0 26 38">
-    <path d="M13 0C5.8 0 0 5.8 0 13c0 10 13 25 13 25s13-15 13-25C26 5.8 20.2 0 13 0z" fill="${color}"/>
-    <circle cx="13" cy="13" r="6" fill="#fff"/>
-  </svg>`;
-  return "data:image/svg+xml;charset=UTF-8,"+encodeURIComponent(svg);
+  return "data:image/svg+xml;utf8," + encodeURIComponent(`
+  <svg xmlns='http://www.w3.org/2000/svg' width='26' height='38'>
+    <path d='M13 0C5.8 0 0 5.8 0 13c0 10 13 25 13 25s13-15 13-25C26 5.8 20.2 0 13 0z' fill='${color}'/>
+    <circle cx='13' cy='13' r='6' fill='white'/>
+  </svg>`);
 }
 function icon(color){
-  return L.icon({ iconUrl: pinSvg(color), iconSize:[26,38], iconAnchor:[13,38], popupAnchor:[0,-30] });
+  return L.icon({
+    iconUrl: pinSvg(color),
+    iconSize:[26,38],
+    iconAnchor:[13,38],
+    popupAnchor:[0,-30]
+  });
 }
 
 /* ==================== LECTURA CSV ==================== */
-let stores = [];
-let puntos = [];
+let stores=[], puntos=[];
 
 function detectarCliente(nombre){
   const n = (nombre || "").toUpperCase();
@@ -193,90 +168,52 @@ function detectarCliente(nombre){
   if(n.includes("METRO")) return "METRO";
   if(n.includes("VIVANDA")) return "VIVANDA";
   if(n.includes("WONG")) return "CENCOSUD";
-  if(n.includes("PLAZA VEA") || n.includes("SUPER VEA") || n.includes("SUPERMERCADOS PERUANOS")) return "SUPERMERCADOS PERUANOS";
+  if(n.includes("PLAZA VEA") || n.includes("SUPER VEA")) return "SUPERMERCADOS PERUANOS";
   return "NO ESPECIFICADO";
 }
 
-function normalizaKeys(obj){
-  const out = {};
-  Object.keys(obj).forEach(k=>{
-    const kk = String(k || "").trim()
-      .replace(/\s+/g,' ')
-      .replace(/\u00A0/g,' ');
-    out[kk] = obj[k];
-  });
-  return out;
-}
+Papa.parse("tiendas.csv", {
+  download: true,
+  header: true,
+  dynamicTyping: true,
+  skipEmptyLines: true,
+  complete: function(res){
+    stores = res.data.map(s => ({
+      name: `${s.Nombre} (${s.Cliente})`,
+      client: detectarCliente(s.Nombre),
+      district: s.DISTRITO,
+      lat: parseFloat(s.Latitud),
+      lng: parseFloat(s.Longitud),
+      sumin: String(s["C.Sumin"]).padStart(4,"0")
+    })).filter(s=>!isNaN(s.lat)&&!isNaN(s.lng));
 
-function pad4(v){
-  if(v === null || v === undefined) return "";
-  const s = String(v).trim();
-  return /^\d+$/.test(s) ? s.padStart(4,'0') : s;
-}
-
-function cargarDatos(){
-  const csvUrl = "tiendas.csv?v=" + Date.now(); // anti-caché
-
-  Papa.parse(csvUrl, {
-    download: true,
-    header: true,
-    dynamicTyping: true,
-    skipEmptyLines: 'greedy',
-    complete: function(results) {
-      console.log("CSV leído:", results.data?.length, "filas");
-      stores = results.data.map(rowRaw => {
-        const r = normalizaKeys(rowRaw);
-
-        const code   = (r["Cliente"] ?? r["CODIGO"] ?? "").toString().trim();
-        const nombre = (r["Nombre"] ?? r["NOMBRE"] ?? "").toString().trim();
-        const dist   = (r["DISTRITO"] ?? r["Distrito"] ?? "").toString().trim();
-        const lat    = parseFloat(r["Latitud"] ?? r["LATITUD"]);
-        const lng    = parseFloat(r["Longitud"] ?? r["LONGITUD"]);
-        const sumin  = pad4(r["C.Sumin"] ?? r["Sumin"] ?? r["SUMIN"]);
-
-        return {
-          name: code ? `${nombre} (${code})` : nombre,
-          client: detectarCliente(nombre),
-          district: dist,
-          lat: lat,
-          lng: lng,
-          sumin: sumin
-        };
-      }).filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lng));
-
-      cargarPuntos();
-    },
-    error: function(err){
-      console.error("Error al leer CSV:", err);
-      alert("No se pudo leer 'tiendas.csv'. Verifica que el archivo existe en la raíz del repositorio.");
-    }
-  });
-}
+    cargarPuntos();
+  }
+});
 
 function cargarPuntos(){
-  // Llenar distritos
-  const sel = document.getElementById("fDist");
-  const districts = [...new Set(stores.map(s=>s.district))].filter(Boolean).sort();
-  sel.innerHTML = `<option value="all">Todos</option>` + districts.map(d=>`<option>${d}</option>`).join("");
 
-  // Crear marcadores
-  puntos = [];
-  stores.forEach(s => {
-    const col = COLORS[s.client] || COLORS["NO ESPECIFICADO"];
-    const mk = L.marker([s.lat, s.lng], {icon: icon(col)});
-    mk.bindPopup(`
-      <b>${s.name}</b><br>
-      <b>Cliente:</b> ${s.client}<br>
-      <b>Distrito:</b> ${s.district}<br>
-      <b>Suministro:</b> ${s.sumin}
-    `);
+  // Distritos
+  const sel=document.getElementById("fDist");
+  const dists=[...new Set(stores.map(s=>s.district))].sort();
+  sel.innerHTML=`<option value='all'>Todos</option>`+dists.map(d=>`<option>${d}</option>`).join("");
 
-    // Agrupación de filtros (METRO -> CENCOSUD, VIVANDA -> SUPERMERCADOS PERUANOS)
-    let group = s.client;
-    if(group === "METRO") group = "CENCOSUD";
-    if(group === "VIVANDA") group = "SUPERMERCADOS PERUANOS";
+  puntos=[];
+  stores.forEach(s=>{
+    const col = COLORS[s.client];
+    const mk=L.marker([s.lat,s.lng],{icon:icon(col)});
+    mk.bindPopup(
+      `<b>${s.name}</b><br>
+      Cliente: ${s.client}<br>
+      Distrito: ${s.district}<br>
+      Suministro: ${s.sumin}`
+    );
 
-    puntos.push({ marker: mk, store: s, group });
+    let group=s.client;
+    if(group==="METRO") group="CENCOSUD";
+    if(group==="VIVANDA") group="SUPERMERCADOS PERUANOS";
+
+    puntos.push({marker:mk,store:s,group});
   });
 
   aplicar();
@@ -286,47 +223,38 @@ function cargarPuntos(){
 function aplicar(){
   cluster.clearLayers();
 
-  const dist = document.getElementById("fDist").value;
-  const sp   = document.getElementById("sp").checked;
-  const cen  = document.getElementById("cen").checked;
-  const tot  = document.getElementById("tot").checked;
-  const unk  = document.getElementById("unk").checked;
+  const dist=document.getElementById("fDist").value;
+  const sp=document.getElementById("sp").checked;
+  const cen=document.getElementById("cen").checked;
+  const tot=document.getElementById("tot").checked;
+  const unk=document.getElementById("unk").checked;
 
-  const visibles = [];
-  puntos.forEach(p=>{
-    const okDist = dist === "all" || p.store.district === dist;
-    const okCad =
-      (p.group === "SUPERMERCADOS PERUANOS" && sp) ||
-      (p.group === "CENCOSUD"                && cen) ||
-      (p.group === "TOTTUS"                  && tot) ||
-      (p.group === "NO ESPECIFICADO"         && unk);
-
-    if(okDist && okCad) visibles.push(p.marker);
-  });
+  const visibles=puntos.filter(p=>{
+    const okD=dist==="all"||p.store.district===dist;
+    const okC=
+      (p.group==="SUPERMERCADOS PERUANOS"&&sp)||
+      (p.group==="CENCOSUD"&&cen)||
+      (p.group==="TOTTUS"&&tot)||
+      (p.group==="NO ESPECIFICADO"&&unk);
+    return okD&&okC;
+  }).map(p=>p.marker);
 
   cluster.addLayers(visibles);
-  document.getElementById("count").textContent =
-    `${visibles.length} tienda${visibles.length===1?'':'s'} visible${visibles.length===1?'':'s'}`;
+  document.getElementById("count").innerText = `${visibles.length} tiendas visibles`;
 
   if(visibles.length){
-    const g = L.featureGroup(visibles);
+    const g=L.featureGroup(visibles);
     map.fitBounds(g.getBounds().pad(0.2));
   }
 }
 
 /* ==================== BUSCAR ==================== */
 function buscar(){
-  const q = document.getElementById("q").value.toLowerCase().trim();
+  const q=document.getElementById("q").value.toLowerCase().trim();
   if(!q) return;
-  const hit = puntos.find(p =>
-    (p.store.name   && p.store.name.toLowerCase().includes(q)) ||
-    (p.store.sumin  && p.store.sumin.includes(q))
+  const hit=puntos.find(p =>
+    p.store.name.toLowerCase().includes(q) ||
+    p.store.sumin.includes(q)
   );
   if(hit){
-    map.setView(hit.marker.getLatLng(), 15);
-    hit.marker.openPopup();
-  }else{
-    alert("No encontrado");
-  }
-}
-document.getElementById("btnBuscar").onclick = buscar
+    map.setView(hit.marker.getLatLng(),15);
