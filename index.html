@@ -9,10 +9,16 @@
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin="anonymous"
   />
 
   <!-- ✅ Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin="anonymous"
+  ></script>
 
   <!-- ✅ MarkerCluster CSS -->
   <link
@@ -25,38 +31,68 @@
   />
 
   <!-- ✅ MarkerCluster JS -->
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script
+    src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"
+  ></script>
 
-  <!-- ✅ Iconos -->
+  <!-- ✅ Bootstrap Icons -->
   <link
     rel="stylesheet"
     href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
   />
 
-  <!-- ✅ PapaParse para leer CSV -->
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <!-- ✅ PapaParse (leer CSV) -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"
+    integrity="sha384-Ol2cJ3YgV8UeN3oHvh6qYv0X4h1L9LxJk1pYzZy6aHqFh5tFXn0GmV0wP6rXNV1l"
+    crossorigin="anonymous"
+  ></script>
 
-  <!-- ✅ Tus estilos -->
   <style>
     :root{
       --brand:#0078D7; --brand-2:#2196F3;
       --text:#102a43;  --panel-bg: rgba(255,255,255,.78);
       --panel-border: rgba(0,0,0,.06); --shadow: 0 10px 30px rgba(0,0,0,.18);
     }
-    body.dark{ --text:#e6edf3; --panel-bg: rgba(17,25,40,.72); --panel-border: rgba(255,255,255,.06); --shadow:0 10px 30px rgba(0,0,0,.5); }
+    body.dark{
+      --text:#e6edf3; --panel-bg: rgba(17,25,40,.72);
+      --panel-border: rgba(255,255,255,.06); --shadow:0 10px 30px rgba(0,0,0,.5);
+    }
     html, body{ margin:0; height:100%; }
     #map{ width:100%; height:100%; }
-    .panel{ position:absolute; z-index:999; background:var(--panel-bg); border:1px solid var(--panel-border);
-      backdrop-filter: blur(12px); padding:16px; border-radius:18px; font-family:"Segoe UI",sans-serif;
-      color:var(--text); box-shadow: var(--shadow); }
+
+    .panel{
+      position:absolute; z-index:999; background:var(--panel-bg);
+      border:1px solid var(--panel-border); backdrop-filter: blur(12px);
+      padding:16px; border-radius:18px; font-family:"Segoe UI",sans-serif;
+      color:var(--text); box-shadow: var(--shadow);
+    }
     .search{ top:16px; right:16px; width:300px; }
     .filters{ top:16px; left:16px; width:260px; }
     .legend{ bottom:16px; left:16px; width:260px; }
-    button{ width:100%; padding:12px; background:linear-gradient(135deg,var(--brand),var(--brand-2));
-      color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer; margin-top:8px; }
+
+    h3{ margin:0 0 10px; display:flex; align-items:center; justify-content:space-between; }
+    button{
+      width:100%; padding:12px; background:linear-gradient(135deg,var(--brand),var(--brand-2));
+      color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer; margin-top:8px;
+    }
     .icon-btn{ border:none; background:transparent; font-size:20px; cursor:pointer; color:var(--text); }
     input,select{ width:100%; padding:10px; border-radius:10px; border:1px solid #ccc; margin-top:8px; }
     .dot{ width:14px; height:14px; border-radius:50%; display:inline-block; margin-right:6px; }
+
+    /* Ajustes mínimos para controles Leaflet en oscuro */
+    .leaflet-control-zoom a,
+    .leaflet-bar a{
+      background: #fff;
+      color: #000;
+      border-bottom: 1px solid rgba(0,0,0,.2);
+    }
+    body.dark .leaflet-control-zoom a,
+    body.dark .leaflet-bar a{
+      background: #0f172a;
+      color: #e2e8f0;
+      border-bottom-color: rgba(255,255,255,.18);
+    }
   </style>
 </head>
 
@@ -148,8 +184,6 @@ function icon(color){
 }
 
 /* ==================== LECTURA CSV ==================== */
-/* Esperamos un CSV con cabeceras: Cliente, Nombre, DISTRITO, Latitud, Longitud, C.Sumin
-   OJO: si hay espacios extra en los encabezados, los recortamos (trim) abajo. */
 let stores = [];
 let puntos = [];
 
@@ -164,13 +198,11 @@ function detectarCliente(nombre){
 }
 
 function normalizaKeys(obj){
-  // Quita espacios/guiones raros de las cabeceras del CSV
   const out = {};
   Object.keys(obj).forEach(k=>{
     const kk = String(k || "").trim()
-      .replace(/\s+/g,' ')   // colapsa espacios
-      .replace(/\u00A0/g,' ') // NBSP -> espacio
-    ;
+      .replace(/\s+/g,' ')
+      .replace(/\u00A0/g,' ');
     out[kk] = obj[k];
   });
   return out;
@@ -183,8 +215,7 @@ function pad4(v){
 }
 
 function cargarDatos(){
-  // Cache-busting por si GitHub Pages cachea el CSV
-  const csvUrl = "tiendas.csv?v=" + Date.now();
+  const csvUrl = "tiendas.csv?v=" + Date.now(); // anti-caché
 
   Papa.parse(csvUrl, {
     download: true,
@@ -192,7 +223,7 @@ function cargarDatos(){
     dynamicTyping: true,
     skipEmptyLines: 'greedy',
     complete: function(results) {
-      // Normaliza cabeceras y transforma filas a formato del mapa
+      console.log("CSV leído:", results.data?.length, "filas");
       stores = results.data.map(rowRaw => {
         const r = normalizaKeys(rowRaw);
 
@@ -240,4 +271,62 @@ function cargarPuntos(){
       <b>Suministro:</b> ${s.sumin}
     `);
 
-    // Agrupación de filtros
+    // Agrupación de filtros (METRO -> CENCOSUD, VIVANDA -> SUPERMERCADOS PERUANOS)
+    let group = s.client;
+    if(group === "METRO") group = "CENCOSUD";
+    if(group === "VIVANDA") group = "SUPERMERCADOS PERUANOS";
+
+    puntos.push({ marker: mk, store: s, group });
+  });
+
+  aplicar();
+}
+
+/* ==================== FILTROS ==================== */
+function aplicar(){
+  cluster.clearLayers();
+
+  const dist = document.getElementById("fDist").value;
+  const sp   = document.getElementById("sp").checked;
+  const cen  = document.getElementById("cen").checked;
+  const tot  = document.getElementById("tot").checked;
+  const unk  = document.getElementById("unk").checked;
+
+  const visibles = [];
+  puntos.forEach(p=>{
+    const okDist = dist === "all" || p.store.district === dist;
+    const okCad =
+      (p.group === "SUPERMERCADOS PERUANOS" && sp) ||
+      (p.group === "CENCOSUD"                && cen) ||
+      (p.group === "TOTTUS"                  && tot) ||
+      (p.group === "NO ESPECIFICADO"         && unk);
+
+    if(okDist && okCad) visibles.push(p.marker);
+  });
+
+  cluster.addLayers(visibles);
+  document.getElementById("count").textContent =
+    `${visibles.length} tienda${visibles.length===1?'':'s'} visible${visibles.length===1?'':'s'}`;
+
+  if(visibles.length){
+    const g = L.featureGroup(visibles);
+    map.fitBounds(g.getBounds().pad(0.2));
+  }
+}
+
+/* ==================== BUSCAR ==================== */
+function buscar(){
+  const q = document.getElementById("q").value.toLowerCase().trim();
+  if(!q) return;
+  const hit = puntos.find(p =>
+    (p.store.name   && p.store.name.toLowerCase().includes(q)) ||
+    (p.store.sumin  && p.store.sumin.includes(q))
+  );
+  if(hit){
+    map.setView(hit.marker.getLatLng(), 15);
+    hit.marker.openPopup();
+  }else{
+    alert("No encontrado");
+  }
+}
+document.getElementById("btnBuscar").onclick = buscar
