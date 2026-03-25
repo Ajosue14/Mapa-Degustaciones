@@ -15,47 +15,32 @@
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
   <!-- ✅ Bootstrap Icons -->
-  <link rel="stylesheet" href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
 
-  <!-- ✅ PapaParse -->
+  <!-- ✅ PapaParse (CSV Reader) -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
   <style>
     :root{
       --brand:#0078D7; --brand-2:#2196F3;
-      --text:#102a43;  --panel-bg: rgba(255,255,255,.78);
-      --panel-border: rgba(0,0,0,.06); --shadow: 0 10px 30px rgba(0,0,0,.18);
+      --text:#102a43; --panel-bg:rgba(255,255,255,.78);
+      --panel-border:rgba(0,0,0,.06); --shadow:0 8px 25px rgba(0,0,0,.2);
     }
-    body.dark{
-      --text:#e6edf3; --panel-bg: rgba(17,25,40,.72);
-      --panel-border: rgba(255,255,255,.06); --shadow:0 10px 30px rgba(0,0,0,.5);
-    }
-    html, body{ margin:0; height:100%; }
-    #map{ width:100%; height:100%; }
-
+    body.dark{--text:#e6edf3;--panel-bg:rgba(17,25,40,.72);}
+    html, body{margin:0;height:100%;}
+    #map{width:100%;height:100%;}
     .panel{
-      position:absolute; z-index:999; background:var(--panel-bg);
-      padding:16px; border-radius:18px; font-family:"Segoe UI",sans-serif;
-      color:var(--text); box-shadow:var(--shadow);
-      border:1px solid var(--panel-border);
+      position:absolute;z-index:999;background:var(--panel-bg);
+      border:1px solid var(--panel-border);backdrop-filter:blur(12px);
+      padding:16px;border-radius:18px;
+      font-family:"Segoe UI";color:var(--text);box-shadow:var(--shadow);
     }
-
-    .search{ top:16px; right:16px; width:300px; }
-    .filters{ top:16px; left:16px; width:260px; }
-    .legend{ bottom:16px; left:16px; width:260px; }
-
-    input,select{
-      width:100%; padding:10px; margin-top:8px;
-      border-radius:10px; border:1px solid #ccc;
-    }
-
-    button{
-      width:100%; padding:12px; margin-top:8px;
-      background:linear-gradient(135deg,var(--brand),var(--brand-2));
-      color:white; border:none; border-radius:10px; cursor:pointer;
-      font-weight:bold;
-    }
-    .dot{ width:14px; height:14px; border-radius:50%; display:inline-block; margin-right:6px; }
+    .search{top:16px;right:16px;width:300px;}
+    .filters{top:16px;left:16px;width:260px;}
+    .legend{bottom:16px;left:16px;width:260px;}
+    input,select{width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;margin-top:8px;}
+    button{width:100%;padding:12px;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:white;border:none;border-radius:10px;margin-top:8px;cursor:pointer;font-weight:bold;}
+    .dot{width:14px;height:14px;border-radius:50%;display:inline-block;margin-right:6px;}
   </style>
 </head>
 
@@ -63,20 +48,18 @@
 
 <div id="map"></div>
 
-<!-- PANEL BUSCAR -->
+<!-- BUSQUEDA -->
 <div class="panel search">
-  <h3>
+  <h3 style="display:flex;justify-content:space-between;">
     <span><i class="bi bi-search"></i> Buscar</span>
-    <button class="icon-btn" id="themeToggle">
-      <i id="themeIcon" class="bi bi-moon"></i>
-    </button>
+    <button id="themeToggle" style="background:none;border:none;font-size:22px;cursor:pointer;"><i id="themeIcon" class="bi bi-moon"></i></button>
   </h3>
   <input id="q" placeholder="Nombre o suministro"/>
   <button id="btnBuscar">Buscar</button>
   <button id="btnLimpiar" style="background:#eee;color:#333;">Limpiar</button>
 </div>
 
-<!-- PANEL FILTROS -->
+<!-- FILTROS -->
 <div class="panel filters">
   <h3><i class="bi bi-sliders"></i> Filtros</h3>
   <label>Distrito</label>
@@ -90,7 +73,7 @@
   <p id="count"></p>
 </div>
 
-<!-- PANEL LEYENDA -->
+<!-- LEYENDA -->
 <div class="panel legend">
   <h3><i class="bi bi-info-circle"></i> Leyenda</h3>
   <p><span class="dot" style="background:#E74C3C"></span>Supermercados Peruanos</p>
@@ -103,14 +86,12 @@
 
 <script>
 /* ========== Tema ========== */
-const prefersDark=window.matchMedia("(prefers-color-scheme:dark)").matches;
-let theme=localStorage.getItem("theme")||(prefersDark?"dark":"light");
+let theme=localStorage.getItem("theme")||"light";
 document.body.classList.toggle("dark",theme==="dark");
 document.getElementById("themeIcon").className=theme==="dark"?"bi bi-sun":"bi bi-moon";
 document.getElementById("themeToggle").onclick=()=>{
   theme=theme==="dark"?"light":"dark";
-  localStorage.setItem("theme",theme);
-  location.reload();
+  localStorage.setItem("theme",theme);location.reload();
 };
 
 /* ========== Mapa ========== */
@@ -128,7 +109,7 @@ const COLORS={
  "NO ESPECIFICADO":"#7F8C8D"
 };
 
-/* ========== Detectar cliente ========== */
+/* ========== Detectar Cliente ========== */
 function detect(n){
  n=n.toUpperCase();
  if(n.includes("TOTTUS")) return "TOTTUS";
@@ -139,15 +120,16 @@ function detect(n){
  return "NO ESPECIFICADO";
 }
 
-/* ========== Pin ========== */
+/* ========== Icono ========== */
 function icon(c){
  return L.icon({
-   iconUrl:"data:image/svg+xml;utf8,"+encodeURIComponent(`
-   <svg xmlns='http://www.w3.org/2000/svg' width='26' height='38'>
-     <path d='M13 0C5.8 0 0 5.8 0 13c0 10 13 25 13 25s13-15 13-25C26 5.8 20.2 0 13 0z' fill='${c}'/>
-     <circle cx='13' cy='13' r='6' fill='white'/>
-   </svg>`),
-   iconSize:[26,38], iconAnchor:[13,38], popupAnchor:[0,-30]
+   iconUrl:"data:image/svg+xml;utf8,"+encodeURIComponent(
+   `<svg xmlns='http://www.w3.org/2000/svg' width='26' height='38'>
+      <path d='M13 0C5.8 0 0 5.8 0 13c0 10 13 25 13 25s13-15 13-25C26 5.8 20.2 0 13 0z' fill='${c}'/>
+      <circle cx='13' cy='13' r='6' fill='white'/>
+    </svg>`
+   ),
+   iconSize:[26,38],iconAnchor:[13,38],popupAnchor:[0,-30]
  });
 }
 
@@ -156,28 +138,30 @@ Papa.parse("tiendas.csv",{
  download:true,
  header:true,
  dynamicTyping:true,
+ skipEmptyLines:true,
  complete:function(r){
 
-  const stores=r.data.filter(s=>s.Latitud&&s.Longitud);
+  const stores = r.data.filter(s=>s.Latitud && s.Longitud);
+  const puntos=[];
 
-  const puntos=stores.map(s=>{
+  stores.forEach(s=>{
     const cli=detect(s.Nombre);
     const mk=L.marker([s.Latitud,s.Longitud],{icon:icon(COLORS[cli])});
     mk.bindPopup(`<b>${s.Nombre} (${s.Cliente})</b><br>${cli}<br>${s.DISTRITO}`);
-    return {mk,dist:s.DISTRITO,grp:cli};
+    puntos.push({mk,dist:s.DISTRITO,grp:cli});
   });
 
-  cargarPuntos(puntos);
+  cargarFiltrosYPuntos(puntos);
  }});
 
-/* ========== Cargar puntos ========== */
-function cargarPuntos(p){
+/* ========== Cargar Puntos y Filtros ========== */
+function cargarFiltrosYPuntos(p){
  cluster.clearLayers();
  p.forEach(x=>cluster.addLayer(x.mk));
 
  const sel=document.getElementById("fDist");
- const dists=[...new Set(p.map(x=>x.dist))].sort();
- sel.innerHTML=`<option value='all'>Todos</option>`+dists.map(d=>`<option>${d}</option>`).join("");
+ const d=[...new Set(p.map(x=>x.dist))].sort();
+ sel.innerHTML=`<option value='all'>Todos</option>`+d.map(x=>`<option>${x}</option>`).join("");
 
  document.getElementById("count").innerText=p.length+" tiendas visibles";
 }
