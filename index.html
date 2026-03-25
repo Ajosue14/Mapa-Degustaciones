@@ -5,20 +5,16 @@
   <title>Mapa PRO</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- ✅ Leaflet -->
+  <!-- ✅ Leaflet CSS -->
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
   />
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
 
-  <!-- ✅ MarkerCluster -->
+  <!-- ✅ Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- ✅ MarkerCluster CSS -->
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
@@ -27,47 +23,37 @@
     rel="stylesheet"
     href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
   />
-  <script
-    src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"
-  ></script>
 
-  <!-- ✅ Bootstrap Icons -->
+  <!-- ✅ MarkerCluster JS -->
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+  <!-- ✅ Iconos -->
   <link
     rel="stylesheet"
     href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
   />
 
-  <!-- ✅ PapaParse (para leer CSV) -->
+  <!-- ✅ PapaParse para leer CSV -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
+  <!-- ✅ Tus estilos -->
   <style>
     :root{
       --brand:#0078D7; --brand-2:#2196F3;
       --text:#102a43;  --panel-bg: rgba(255,255,255,.78);
       --panel-border: rgba(0,0,0,.06); --shadow: 0 10px 30px rgba(0,0,0,.18);
     }
-    body.dark{
-      --text:#e6edf3; --panel-bg: rgba(17,25,40,.72);
-      --panel-border: rgba(255,255,255,.06); --shadow:0 10px 30px rgba(0,0,0,.5);
-    }
+    body.dark{ --text:#e6edf3; --panel-bg: rgba(17,25,40,.72); --panel-border: rgba(255,255,255,.06); --shadow:0 10px 30px rgba(0,0,0,.5); }
     html, body{ margin:0; height:100%; }
     #map{ width:100%; height:100%; }
-
-    .panel{
-      position:absolute; z-index:999; background:var(--panel-bg);
-      border:1px solid var(--panel-border); backdrop-filter: blur(12px);
-      padding:16px; border-radius:18px; font-family:"Segoe UI",sans-serif;
-      color:var(--text); box-shadow: var(--shadow);
-    }
+    .panel{ position:absolute; z-index:999; background:var(--panel-bg); border:1px solid var(--panel-border);
+      backdrop-filter: blur(12px); padding:16px; border-radius:18px; font-family:"Segoe UI",sans-serif;
+      color:var(--text); box-shadow: var(--shadow); }
     .search{ top:16px; right:16px; width:300px; }
     .filters{ top:16px; left:16px; width:260px; }
     .legend{ bottom:16px; left:16px; width:260px; }
-
-    h3{ margin:0 0 10px; display:flex; align-items:center; justify-content:space-between; }
-    button{
-      width:100%; padding:12px; background:linear-gradient(135deg,var(--brand),var(--brand-2));
-      color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer; margin-top:8px;
-    }
+    button{ width:100%; padding:12px; background:linear-gradient(135deg,var(--brand),var(--brand-2));
+      color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer; margin-top:8px; }
     .icon-btn{ border:none; background:transparent; font-size:20px; cursor:pointer; color:var(--text); }
     input,select{ width:100%; padding:10px; border-radius:10px; border:1px solid #ccc; margin-top:8px; }
     .dot{ width:14px; height:14px; border-radius:50%; display:inline-block; margin-right:6px; }
