@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Mapa PRO</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- MarkerCluster -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+
+  <style>
+    /* ================= ESTILOS GENERALES ================= */
+    :root{
+      --brand:#0078D7;
+      --brand-2:#2196F3;
+      --text:#102a43;
+      --panel-bg: rgba(255,255,255,.78);
+      --panel-border: rgba(0,0,0,.06);
+      --shadow: 0 10px 30px rgba(0,0,0,.18);
+    }
+
+    body.dark{
+      --text:#e6edf3;
+      --panel-bg: rgba(17,25,40,.72);
+      --panel-border: rgba(255,255,255,.06);
+      --shadow: 0 10px 30px rgba(0,0,0,.5);
+    }
+
+    html, body{ margin:0; height:100%; }
+    #map{ width:100%; height:100%; }
+
+    .panel{
+      position:absolute;
+      z-index:999;
+      background: var(--panel-bg);
+      border:1px solid var(--panel-border);
+      backdrop-filter: blur(12px);
+      padding:16px;
+      border-radius:18px;
+      font-family:"Segoe UI",sans-serif;
+      color:var(--text);
+      box-shadow: var(--shadow);
+    }
+
+    .search{ top:16px; right:16px; width:300px; }
+    .filters{ top:16px; left:16px; width:260px; }
+    .legend{ bottom:16px; left:16px; width:260px; }
+
+    button{
+      width:100%;
+      padding:12px;
+      background:linear-gradient(135deg,var(--brand),var(--brand-2));
+      color:white;
+      border:none;
+      border-radius:10px;
+      font-weight:bold;
+      cursor:pointer;
+      margin-top:8px;
+    }
+
+    .icon-btn{
+      border:none;
+      background:transparent;
+      font-size:20px;
+      cursor:pointer;
+      color:var(--text);
+    }
+
+    input,select{
+      width:100%;
+      padding:10px;
+      border-radius:10px;
+      border:1px solid #ccc;
+      margin-top:8px;
+    }
+
+    .dot{
+      width:14px; height:14px;
+      border-radius:50%;
+      display:inline-block;
+      margin-right:6px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+
+  <!-- PANEL BUSCAR -->
+  <div class="panel search">
+    <h3>
+      <i class="bi bi-search"></i> Buscar
+      <button class="icon-btn" id="themeToggle"><i id="themeIcon" class="bi bi-moon"></i></button>
+    </h3>
+
+    <input id="q" placeholder="Nombre o suministro" />
+    <button id="btnBuscar">Buscar</button>
+    <button id="btnLimpiar" style="background:#eee;color:#333;">Limpiar</button>
+  </div>
+
+  <!-- PANEL FILTROS -->
+  <div class="panel filters">
+    <h3><i class="bi bi-sliders"></i> Filtros</h3>
+
+    <label>Distrito</label>
+    <select id="fDist"><option value="all">Todos</option></select>
+
+    <label><input type="checkbox" id="sp" checked> <span class="dot" style="background:#E74C3C"></span>Supermercados Peruanos</label><br>
+    <label><input type="checkbox" id="cen" checked> <span class="dot" style="background:#3498DB"></span>Cencosud</label><br>
+    <label><input type="checkbox" id="tot" checked> <span class="dot" style="background:#27AE60"></span>Tottus</label><br>
+    <label><input type="checkbox" id="unk" checked> <span class="dot" style="background:#7F8C8D"></span>Otros</label><br>
+
+    <p id="count"></p>
+  </div>
+
+  <!-- PANEL LEYENDA -->
+  <div class="panel legend">
+    <h3><i class="bi bi-info-circle"></i> Leyenda</h3>
+    <p><span class="dot" style="background:#E74C3C"></span>Supermercados Peruanos</p>
+    <p><span class="dot" style="background:#3498DB"></span>Cencosud</p>
+    <p><span class="dot" style="background:#27AE60"></span>Tottus</p>
+    <p><span class="dot" style="background:#F1C40F"></span>Metro</p>
+    <p><span class="dot" style="background:#E67E22"></span>Vivanda</p>
+    <p><span class="dot" style="background:#7F8C8D"></span>Otros</p>
+  </div>
+
+
+<script>
+/* ================== TEMA ================== */
+const prefersDark = window.matchMedia("(prefers-color-scheme:dark)").matches;
+let theme = localStorage.getItem("theme") || (prefersDark ? "dark" : "light");
+applyTheme();
+
+function applyTheme(){
+  document.body.classList.toggle("dark", theme==="dark");
+  document.getElementById("themeIcon").className = theme==="dark" ? "bi bi-sun" : "bi bi-moon";
+}
+
+document.getElementById("themeToggle").onclick = ()=>{
+  theme = theme==="dark" ? "light" : "dark";
+  localStorage.setItem("theme", theme);
+  applyTheme();
+};
+
+/* ================== MAPA ================== */
+const map = L.map("map").setView([-12.05,-77.05], 11);
+
+const lightLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png");
+const darkLayer  = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png");
+
+(theme==="dark" ? darkLayer : lightLayer).addTo(map);
+
+const cluster = L.markerClusterGroup();
+map.addLayer(cluster);
+
+/* ================== COLORES ================== */
+const COLORS = {
+  "SUPERMERCADOS PERUANOS": "#E74C3C",
+  "CENCOSUD": "#3498DB",
+  "TOTTUS": "#27AE60",
+  "METRO": "#F1C40F",
+  "VIVANDA": "#E67E22",
+  "NO ESPECIFICADO": "#7F8C8D"
+};
+
+/* PIN SVG */
+function pinSvg(color){
+  const svg = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="26" height="38" viewBox="0 0 26 38">
+    <path d="M13 0C5.8 0 0 5.8 0 13c0 10 13 25 13 25s13-15 13-25C26 5.8 20.2 0 13 0z" fill="${color}"/>
+    <circle cx="13" cy="13" r="6" fill="#fff"/>
+  </svg>`;
+  return "data:image/svg+xml;charset=UTF-8,"+encodeURIComponent(svg);
+}
+
+function icon(color){
+  return L.icon({
+    iconUrl: pinSvg(color),
+    iconSize:[26,38],
+    iconAnchor:[13,38],
+    popupAnchor:[0,-30]
+  });
+}
+
+/* ================== CARGAR TIENDAS ================== */
+let stores=[];
+let puntos=[];
+
+async function cargarDatos(){
+  const r = await fetch("tiendas.json",{cache:"no-store"});
+  stores = await r.json();
+
+  const sel = document.getElementById("fDist");
+  const districts = [...new Set(stores.map(s=>s.district))].sort();
+  sel.innerHTML = `<option value='all'>Todos</option>` + districts.map(d=>`<option>${d}</option>`).join("");
+
+  puntos=[];
+  stores.forEach(s=>{
+    const col = COLORS[s.client] || COLORS["NO ESPECIFICADO"];
+    const mk = L.marker([s.lat,s.lng],{icon:icon(col)});
+
+    mk.bindPopup(`
+      <b>${s.name}</b><br>
+      <b>Cliente:</b> ${s.client}<br>
+      <b>Distrito:</b> ${s.district}<br>
+      <b>Suministro:</b> ${s.sumin}
+    `);
+
+    let filterGroup=s.client;
+    if(filterGroup==="METRO") filterGroup="CENCOSUD";
+    if(filterGroup==="VIVANDA") filterGroup="SUPERMERCADOS PERUANOS";
+
+    puntos.push({marker:mk,store:s,group:filterGroup});
+  });
+
+  aplicar();
+}
+cargarDatos();
+
+/* ================== FILTROS ================== */
+function aplicar(){
+  cluster.clearLayers();
+
+  const dist=document.getElementById("fDist").value;
+  const sp = document.getElementById("sp").checked;
+  const cen= document.getElementById("cen").checked;
+  const tot= document.getElementById("tot").checked;
+  const unk= document.getElementById("unk").checked;
+
+  let visibles=[];
+  puntos.forEach(p=>{
+    const okDist = dist==="all" || p.store.district===dist;
+    const okCad =
+      (p.group==="SUPERMERCADOS PERUANOS" && sp) ||
+      (p.group==="CENCOSUD" && cen) ||
+      (p.group==="TOTTUS" && tot) ||
+      (p.group==="NO ESPECIFICADO" && unk);
+
+    if(okDist && okCad) visibles.push(p.marker);
+  });
+
+  cluster.addLayers(visibles);
+  document.getElementById("count").textContent = `${visibles.length} tiendas visibles`;
+
+  if(visibles.length){
+    const g=L.featureGroup(visibles);
+    map.fitBounds(g.getBounds().pad(0.2));
+  }
+}
+
+/* ================== BUSCAR ================== */
+function buscar(){
+  const q = document.getElementById("q").value.toLowerCase().trim();
+  if(!q) return;
+
+  const hit = puntos.find(p =>
+    p.store.name.toLowerCase().includes(q) ||
+    p.store.sumin.includes(q)
+  );
+
+  if(hit){
+    map.setView(hit.marker.getLatLng(),15);
+    hit.marker.openPopup();
+  } else {
+    alert("No encontrado");
+  }
+}
+
+document.getElementById("btnBuscar").onclick = buscar;
+document.getElementById("btnLimpiar").onclick = ()=>{
+  document.getElementById("q").value="";
+};
+
+document.getElementById("q").addEventListener("keydown", e=>{
+  if(e.key==="Enter") buscar();
+});
+</script>
+
+</body>
+</html>
+``
