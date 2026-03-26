@@ -1,254 +1,226 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8"/>
-  <title>Mapa PRO</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta charset="utf-8" />
+<title>Mapa PRO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- ✅ CSS reales -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <link rel="stylesheet" href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+<!-- ✅ CSS reales -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
-  <style>
-    :root{
-      --panel-bg:#fff; --panel-br:#ddd; --text:#102a43;
-      --shadow:0 10px 30px rgba(0,0,0,.15);
-      --fab-bg:#fff; --fab-tx:#111;
-    }
-    html,body{margin:0;height:100%;}
-    #map{width:100%;height:100%;}
+<style>
+  :root{
+    --panel-bg:#fff; --panel-br:#ddd; --text:#102a43;
+    --shadow:0 10px 30px rgba(0,0,0,.15);
+    --fab-bg:#fff; --fab-tx:#111;
+  }
+  html,body{margin:0;height:100%;}
+  #map{width:100%;height:100%;}
 
-    /* Baja el control de zoom para que NO se encime con el FAB izquierdo */
-    .leaflet-top.leaflet-left{ top:80px; }
+  .leaflet-top.leaflet-left{ top:80px; } /* baja el zoom */
 
-    /* Paneles */
-    .panel{
-      position:absolute; z-index:999; background:var(--panel-bg); color:var(--text);
-      border:1px solid var(--panel-br); border-radius:14px; padding:14px;
-      font-family:"Segoe UI", system-ui, -apple-system, Arial; box-shadow:var(--shadow);
-      transition: transform .25s ease, opacity .25s ease, visibility .25s;
-    }
-    .collapsed{ opacity:0; visibility:hidden; transform:translateY(-10px); }
-    .filters{ top:80px; left:12px;  width:260px; }
-    .search { top:80px; right:12px; width:260px; }
-    .legend { bottom:12px; left:12px; width:240px; }
-    input,select{ width:100%; padding:10px; margin-top:8px; border-radius:10px; border:1px solid #ccc; }
-    button{
-      width:100%; padding:10px; margin-top:8px; border:none; border-radius:10px; cursor:pointer;
-      background:#0078d7; color:white; font-weight:700;
-    }
-    .btn-plain{ background:#f2f2f2; color:#333; }
+  .panel{
+    position:absolute; z-index:999; background:var(--panel-bg); color:var(--text);
+    border:1px solid var(--panel-br); border-radius:14px; padding:14px;
+    font-family:"Segoe UI"; box-shadow:var(--shadow);
+    transition:.25s ease;
+  }
+  .collapsed{opacity:0;visibility:hidden;transform:translateY(-10px);}
+  .filters{top:80px;left:12px;width:260px;}
+  .search{top:80px;right:12px;width:260px;}
+  .legend{bottom:12px;left:12px;width:240px;}
 
-    /* FABs claros, separados y sin encimarse */
-    .fab{
-      position:absolute; z-index:1000; width:48px; height:48px; border-radius:50%;
-      background:var(--fab-bg); color:var(--fab-tx); display:grid; place-items:center;
-      box-shadow:0 6px 18px rgba(0,0,0,.25); border:1px solid #ddd; cursor:pointer;
-    }
-    .fab-left{  left:12px;  top:12px; }   /* FILTROS */
-    .fab-right{ right:12px; top:12px; }   /* BUSCAR */
+  input,select{width:100%;padding:10px;margin-top:8px;border-radius:10px;border:1px solid #ccc;}
+  button{
+    width:100%;padding:10px;margin-top:8px;border:none;border-radius:10px;
+    background:#0078d7;color:white;font-weight:700;cursor:pointer;
+  }
+  .btn-plain{background:#f2f2f2;color:#333;}
 
-    .btn-close{
-      position:absolute; right:10px; top:10px; width:28px; height:28px;
-      background:#eee; border:none; border-radius:50%; display:grid; place-items:center; cursor:pointer;
-    }
+  /* FABs */
+  .fab{
+    position:absolute;z-index:1000;width:48px;height:48px;border-radius:50%;
+    background:var(--fab-bg);color:var(--fab-tx);display:grid;place-items:center;
+    border:1px solid #ddd;box-shadow:0 6px 18px rgba(0,0,0,.25);cursor:pointer;
+  }
+  .fab-left{left:12px;top:12px;}
+  .fab-right{right:12px;top:12px;}
 
-    .dot{ width:14px; height:14px; border-radius:50%; display:inline-block; margin-right:5px; }
-  </style>
+  .btn-close{
+    position:absolute;right:10px;top:10px;width:28px;height:28px;
+    background:#eee;border:none;border-radius:50%;display:grid;place-items:center;
+  }
+
+  .dot{width:14px;height:14px;border-radius:50%;display:inline-block;margin-right:5px;}
+</style>
 </head>
 
 <body>
 
-  <div id="map"></div>
+<div id="map"></div>
 
-  <!-- FABs -->
-  <button id="openFilters" class="fab fab-left"  title="Filtros"><i class="bi bi-sliders"></i></button>
-  <button id="openSearch"  class="fab fab-right" title="Buscar"><i class="bi bi-search"></i></button>
+<!-- FABs -->
+<button id="openFilters" class="fab fab-left"><i class="bi bi-sliders"></i></button>
+<button id="openSearch" class="fab fab-right"><i class="bi bi-search"></i></button>
 
-  <!-- Panel FILTROS (oculto por defecto) -->
-  <div id="panelFilters" class="panel filters collapsed" aria-hidden="true">
-    <button class="btn-close" id="closeFilters" title="Cerrar"><i class="bi bi-x"></i></button>
-    <h3>Filtros</h3>
-    <label>Distrito</label>
-    <select id="fDist"><option value="all">Todos</option></select>
-    <p id="count" style="margin-top:10px;"></p>
-  </div>
+<!-- Panel FILTROS -->
+<div id="panelFilters" class="panel filters collapsed">
+  <button class="btn-close" id="closeFilters"><i class="bi bi-x"></i></button>
+  <h3>Filtros</h3>
+  <label>Distrito</label>
+  <select id="fDist"><option value="all">Todos</option></select>
+  <p id="count"></p>
+</div>
 
-  <!-- Panel BUSCAR (oculto por defecto) -->
-  <div id="panelSearch" class="panel search collapsed" aria-hidden="true">
-    <button class="btn-close" id="closeSearch" title="Cerrar"><i class="bi bi-x"></i></button>
-    <h3>Buscar</h3>
-    <input id="q" placeholder="Nombre o suministro"/>
-    <button id="btnBuscar">Buscar</button>
-    <button id="btnLimpiar" class="btn-plain">Limpiar</button>
-  </div>
+<!-- Panel BUSCAR -->
+<div id="panelSearch" class="panel search collapsed">
+  <button class="btn-close" id="closeSearch"><i class="bi bi-x"></i></button>
+  <h3>Buscar</h3>
+  <input id="q" placeholder="Nombre o suministro">
+  <button id="btnBuscar">Buscar</button>
+  <button id="btnLimpiar" class="btn-plain">Limpiar</button>
+</div>
 
-  <!-- Leyenda (siempre visible) -->
-  <div class="panel legend" aria-hidden="false">
-    <h3>Leyenda</h3>
-    <p><span class="dot" style="background:#E74C3C"></span>Supermercados Peruanos</p>
-    <p><span class="dot" style="background:#3498DB"></span>Cencosud</p>
-    <p><span class="dot" style="background:#27AE60"></span>Tottus</p>
-    <p><span class="dot" style="background:#F1C40F"></span>Metro</p>
-    <p><span class="dot" style="background:#E67E22"></span>Vivanda</p>
-    <p><span class="dot" style="background:#7F8C8D"></span>Otros</p>
-  </div>
+<!-- LEYENDA -->
+<div class="panel legend">
+  <h3>Leyenda</h3>
+  <p><span class="dot" style="background:#E74C3C"></span>Supermercados Peruanos</p>
+  <p><span class="dot" style="background:#3498DB"></span>Cencosud</p>
+  <p><span class="dot" style="background:#27AE60"></span>Tottus</p>
+  <p><span class="dot" style="background:#F1C40F"></span>Metro</p>
+  <p><span class="dot" style="background:#E67E22"></span>Vivanda</p>
+  <p><span class="dot" style="background:#7F8C8D"></span>Otros</p>
+</div>
 
-  <!-- ✅ JS reales -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<!-- ✅ SCRIPTS reales -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
-  <script>
-  // ====================== MAPA ======================
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
   const map = L.map("map").setView([-12.05,-77.05], 11);
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-    attribution:"© OpenStreetMap • © CARTO"
-  }).addTo(map);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
-  // Pines SIEMPRE visibles (sin cluster)
   const layerPins = L.layerGroup().addTo(map);
 
-  // ====================== COLORES ======================
+  /* Colores */
   const COLORS = {
-    "SUPERMERCADOS PERUANOS":"#E74C3C",  // rojo
-    "CENCOSUD":"#3498DB",                // azul
-    "TOTTUS":"#27AE60",                  // verde
-    "METRO":"#F1C40F",                   // amarillo
-    "VIVANDA":"#E67E22",                 // naranja
-    "NO ESPECIFICADO":"#7F8C8D"          // gris
+    "SUPERMERCADOS PERUANOS":"#E74C3C",
+    "CENCOSUD":"#3498DB",
+    "TOTTUS":"#27AE60",
+    "METRO":"#F1C40F",
+    "VIVANDA":"#E67E22",
+    "NO ESPECIFICADO":"#7F8C8D"
   };
 
-  function pinIcon(color){
+  function pin(color){
     const svg = `
-      <svg xmlns='http://www.w3.org/2000/svg' width='26' height='38'>
-        <path d='M13 0C5.8 0 0 5.8 0 13c0 10 13 25 13 25s13-15 13-25C26 5.8 20.2 0 13 0z' fill='${color}'/>
-        <circle cx='13' cy='13' r='6' fill='white'/>
-      </svg>`;
+    <svg xmlns='http://www.w3.org/2000/svg' width='26' height='38'>
+      <path d='M13 0C5.8 0 0 5.8 0 13c0 10 13 25 13 25s13-15 13-25C26 5.8 20.2 0 13 0z' fill='${color}'/>
+      <circle cx='13' cy='13' r='6' fill='white'/>
+    </svg>`;
     return L.icon({
-      iconUrl: "data:image/svg+xml;utf8," + encodeURIComponent(svg),
-      iconSize:[26,38], iconAnchor:[13,38], popupAnchor:[0,-30]
+      iconUrl:"data:image/svg+xml;utf8,"+encodeURIComponent(svg),
+      iconSize:[26,38],iconAnchor:[13,38],popupAnchor:[0,-30]
     });
   }
 
-  // ====================== Helpers CSV ======================
-  function normKeys(row){
-    const out = {};
-    for(const k in row){
-      if(!Object.prototype.hasOwnProperty.call(row,k)) continue;
-      const nk = String(k||"").replace(/\uFEFF/g,"").replace(/\u00A0/g," ").trim().toUpperCase();
-      out[nk] = row[k];
+  function NK(r){
+    const out={};
+    for(const k in r){
+      out[k.trim().toUpperCase()] = r[k];
     }
     return out;
   }
-  function pad4(v){ if(v==null) return ""; const s=String(v).trim(); return /^\d+$/.test(s)? s.padStart(4,"0"): s; }
 
   function stdClient(nombre, clienteRaw){
-    const c = (clienteRaw||"").toUpperCase();
+    const c = String(clienteRaw||"").toUpperCase();  // ✅ FIX AQUÍ
+    const n = String(nombre||"").toUpperCase();
+
     if(c.includes("SUPERMERCADOS")) return "SUPERMERCADOS PERUANOS";
     if(c.includes("CENCOSUD"))      return "CENCOSUD";
     if(c.includes("TOTTUS"))        return "TOTTUS";
-    const n = (nombre||"").toUpperCase();
     if(n.includes("METRO"))         return "METRO";
     if(n.includes("VIVANDA"))       return "VIVANDA";
     if(n.includes("WONG"))          return "CENCOSUD";
     if(n.includes("PLAZA VEA") || n.includes("SUPER VEA"))
-                                    return "SUPERMERCADOS PERUANOS";
+      return "SUPERMERCADOS PERUANOS";
+
     return "NO ESPECIFICADO";
   }
 
-  // ====================== Cargar CSV y pintar ======================
-  let PUNTOS = []; // { mk, nombre, dist, cliStd, sumin }
+  let PUNTOS=[];
 
-  Papa.parse("tiendas.csv?v="+Date.now(), {
-    download:true, header:true, dynamicTyping:true, skipEmptyLines:"greedy",
-    complete: (res)=>{
-      const raw = res.data || [];
+  Papa.parse("tiendas.csv?v="+Date.now(),{
+    download:true, header:true, dynamicTyping:true,
+    complete:(res)=>{
+      res.data.forEach(r0=>{
+        const r = NK(r0);
+        const nombre = r["NOMBRE"];
+        const lat = parseFloat(r["LATITUD"]);
+        const lng = parseFloat(r["LONGITUD"]);
+        if(!lat || !lng) return;
 
-      raw.forEach(r0=>{
-        const r = normKeys(r0);
-        const nombre = (r["NOMBRE"]||"").toString().trim();
-        const dist   = (r["DISTRITO"]||"").toString().trim();
-        const lat    = parseFloat(r["LATITUD"]);
-        const lng    = parseFloat(r["LONGITUD"]);
-        const sumin  = pad4(r["C.SUMIN"] || r["SUMIN"] || r["SUM"]);
         const cliStd = stdClient(nombre, r["CLIENTE"]);
+        const color  = COLORS[cliStd];
+        const dist   = r["DISTRITO"];
+        const sumin  = String(r["C.SUMIN"] || r["SUMIN"] || "").padStart(4,"0");
 
-        if(!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+        const mk = L.marker([lat,lng], {icon:pin(color)});
+        mk.bindPopup(`<b>${nombre}</b><br>${cliStd}<br>${dist}<br>${sumin}`);
 
-        const mk = L.marker([lat,lng], { icon: pinIcon(COLORS[cliStd]||COLORS["NO ESPECIFICADO"]), title:nombre });
-        mk.bindPopup(
-          `<b>${nombre}</b><br>
-           <b>Cadena:</b> ${cliStd}<br>
-           <b>Distrito:</b> ${dist}<br>
-           <b>Suministro:</b> ${sumin || "-"}`);
-
-        PUNTOS.push({ mk, nombre, dist, cliStd, sumin });
+        PUNTOS.push({mk,nombre,dist,cliStd,sumin});
         layerPins.addLayer(mk);
       });
 
-      // Contador y distritos
-      document.getElementById("count").innerText = `${PUNTOS.length} tiendas`;
+      document.getElementById("count").innerText = PUNTOS.length+" tiendas";
+
       const sel = document.getElementById("fDist");
-      const dists = [...new Set(PUNTOS.map(p=>p.dist))].filter(Boolean).sort();
+      const dists = [...new Set(PUNTOS.map(p=>p.dist))].sort();
       sel.innerHTML = `<option value="all">Todos</option>` + dists.map(d=>`<option>${d}</option>`).join("");
 
-      // Eventos
-      sel.addEventListener("change", aplicarDistrito);
-      document.getElementById("btnBuscar").addEventListener("click", buscar);
-      document.getElementById("btnLimpiar").addEventListener("click", ()=>{ document.getElementById("q").value=""; });
-      document.getElementById("q").addEventListener("keydown", e=>{ if(e.key==="Enter") buscar(); });
-
-      // Ajuste inicial a TODO
       if(PUNTOS.length){
         const g = L.featureGroup(PUNTOS.map(p=>p.mk));
         map.fitBounds(g.getBounds().pad(0.2));
       }
-    },
-    error: (err)=>{ console.error("PapaParse error:", err); alert("No se pudo leer 'tiendas.csv'."); }
+    }
   });
 
-  // ====================== Filtrar solo por distrito ======================
   function aplicarDistrito(){
-    const dist = document.getElementById("fDist").value;
+    const dist=document.getElementById("fDist").value;
     layerPins.clearLayers();
     const visibles = (dist==="all") ? PUNTOS : PUNTOS.filter(p=>p.dist===dist);
-    visibles.forEach(p=> layerPins.addLayer(p.mk));
-    document.getElementById("count").innerText =
-      `${visibles.length} tienda${visibles.length===1?"":"s"} visible${visibles.length===1?"":"s"}`;
-    if(visibles.length){
-      const g = L.featureGroup(visibles.map(p=>p.mk));
-      map.fitBounds(g.getBounds().pad(0.2));
-    }
+    visibles.forEach(p=>layerPins.addLayer(p.mk));
   }
+  document.getElementById("fDist").onchange=aplicarDistrito;
 
-  // ====================== Buscar (nombre o suministro) ======================
-  function buscar(){
-    const q = document.getElementById("q").value.toLowerCase().trim();
-    if(!q) return;
-    const hit = PUNTOS.find(p =>
-      (p.nombre && p.nombre.toLowerCase().includes(q)) ||
-      (p.sumin  && p.sumin.includes(q))
-    );
+  document.getElementById("btnBuscar").onclick=()=>{
+    const q=document.getElementById("q").value.toLowerCase();
+    const hit=PUNTOS.find(p=>p.nombre.toLowerCase().includes(q)||p.sumin.includes(q));
     if(hit){
-      map.setView(hit.mk.getLatLng(), 16);
+      map.setView(hit.mk.getLatLng(),16);
       hit.mk.openPopup();
-    }else{
-      alert("No encontrado");
-    }
-  }
+    }else alert("No encontrado");
+  };
+  document.getElementById("btnLimpiar").onclick=()=>{document.getElementById("q").value="";};
 
-  // ====================== Abrir/cerrar paneles ======================
+  /* Panel slide */
   const PF=document.getElementById("panelFilters");
   const PS=document.getElementById("panelSearch");
-  document.getElementById("openFilters").onclick=()=>{ PF.classList.remove("collapsed"); map.invalidateSize(); }
-  document.getElementById("openSearch").onclick =()=>{ PS.classList.remove("collapsed"); map.invalidateSize(); }
-  document.getElementById("closeFilters").onclick=()=> PF.classList.add("collapsed");
-  document.getElementById("closeSearch").onclick =()=> PS.classList.add("collapsed");
+  openFilters.onclick=()=>PF.classList.remove("collapsed");
+  openSearch.onclick =()=>PS.classList.remove("collapsed");
+  closeFilters.onclick=()=>PF.classList.add("collapsed");
+  closeSearch.onclick =()=>PS.classList.add("collapsed");
   document.addEventListener("click",(e)=>{
-    if(!PF.contains(e.target) && !openFilters.contains(e.target)) PF.classList.add("collapsed");
-    if(!PS.contains(e.target) && !openSearch.contains(e.target))  PS.classList.add("collapsed");
+    if(!PF.contains(e.target)&&!openFilters.contains(e.target)) PF.classList.add("collapsed");
+    if(!PS.contains(e.target)&&!openSearch.contains(e.target))  PS.classList.add("collapsed");
   });
-  </script>
+
+});
+</script>
+
 </body>
 </html>
 ``
