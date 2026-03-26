@@ -5,36 +5,39 @@
   <title>Mapa PRO</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- CSS -->
+  <!-- ✅ ESTILOS REALES -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
   <link rel="stylesheet" href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
+  <!-- ✅ SCRIPTS REALES -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
   <style>
-    :root{
-      --brand:#0078D7; --brand-2:#2196F3;
-      --text:#102a43;  --panel-bg: rgba(255,255,255,.78);
-      --panel-border: rgba(0,0,0,.06); --shadow: 0 10px 30px rgba(0,0,0,.18);
-    }
+    :root{ --brand:#0078D7; --brand-2:#2196F3; --text:#102a43;
+           --panel-bg:rgba(255,255,255,.78); --panel-border:rgba(0,0,0,.06);
+           --shadow:0 10px 30px rgba(0,0,0,.18); }
     html, body{ margin:0; height:100%; }
     #map{ width:100%; height:100%; }
 
     .panel{
       position:absolute; z-index:999; background:var(--panel-bg);
-      border:1px solid var(--panel-border); backdrop-filter: blur(12px);
+      border:1px solid var(--panel-border); backdrop-filter:blur(12px);
       padding:16px; border-radius:18px; font-family:"Segoe UI",sans-serif;
-      color:var(--text); box-shadow: var(--shadow);
+      color:var(--text); box-shadow:var(--shadow);
     }
     .search{ top:16px; right:16px; width:300px; }
     .filters{ top:16px; left:16px; width:260px; }
     .legend{ bottom:16px; left:16px; width:260px; }
 
-    h3{ margin:0 0 10px; display:flex; align-items:center; justify-content:space-between; }
     input,select{ width:100%; padding:10px; border-radius:10px; border:1px solid #ccc; margin-top:8px; }
     button{
-      width:100%; padding:12px; margin-top:8px; border:none; border-radius:10px; cursor:pointer;
-      background:linear-gradient(135deg,var(--brand),var(--brand-2)); color:#fff; font-weight:bold;
+      width:100%; padding:12px; margin-top:8px;
+      background:linear-gradient(135deg,var(--brand),var(--brand-2)); color:#fff; border:none;
+      border-radius:10px; cursor:pointer; font-weight:bold;
     }
     .dot{ width:14px; height:14px; border-radius:50%; display:inline-block; margin-right:6px; }
   </style>
