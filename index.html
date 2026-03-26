@@ -1,102 +1,208 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<title>Mapa PRO – Con Filtros</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8" />
+  <title>Mapa PRO – Desde Cero (Filtros)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<!-- ✅ CSS reales -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+  <!-- ✅ CSS reales -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
 
-<style>
-  html,body{margin:0;height:100%;}
-  #map{width:100%;height:100%;}
+  <style>
+    html,body{margin:0;height:100%;}
+    #map{width:100%;height:100%;}
 
-  .panel{
-    position:absolute;z-index:999;background:white;padding:14px;
-    border-radius:12px;border:1px solid #ddd;font-family:"Segoe UI",system-ui,-apple-system,Arial;
-    box-shadow:0 4px 16px rgba(0,0,0,.12);
-  }
-  .filters{top:12px;left:12px;width:280px;}
-  .legend{bottom:12px;left:12px;width:220px;}
-  .dot{width:14px;height:14px;border-radius:50%;display:inline-block;margin-right:6px;}
-  select{width:100%;padding:8px;border:1px solid #ccc;border-radius:10px;}
-</style>
+    .panel{
+      position:absolute;z-index:999;background:#fff;padding:14px;border-radius:12px;
+      border:1px solid #ddd;font-family:"Segoe UI",system-ui,-apple-system,Arial;
+      box-shadow:0 4px 16px rgba(0,0,0,.12);
+    }
+    .filters{top:12px;left:12px;width:280px;}
+    .legend{bottom:12px;left:12px;width:220px;}
+    .dot{width:14px;height:14px;border-radius:50%;display:inline-block;margin-right:8px;}
+    select{width:100%;padding:8px;border:1px solid #ccc;border-radius:10px;}
+  </style>
 </head>
+
 <body>
+  <div id="map"></div>
 
-<div id="map"></div>
+  <!-- Filtros -->
+  <div class="panel filters">
+    <h3 style="margin-top:0"><i class="bi bi-sliders"></i> Filtros</h3>
 
-<!-- ✅ PANEL FILTROS -->
-<div class="panel filters">
-  <h3 style="margin-top:0"><i class="bi bi-sliders"></i> Filtros</h3>
+    <label><b>Distrito</b></label>
+    <select id="fDist"><option value="all">Cargando…</option></select>
+    <div style="height:10px"></div>
 
-  <label><b>Distrito</b></label>
-  <select id="fDist"><option value="all">Cargando…</option></select>
-  <div style="height:10px"></div>
+    <label><b>Cadena</b></label>
+    <select id="fCadena"><option value="all">Todas</option></select>
+  </div>
 
-  <label><b>Cadena</b></label>
-  <select id="fCadena">
-    <option value="all">Todas</option>
-    <option value="SUPERMERCADOS PERUANOS">Supermercados Peruanos</option>
-    <option value="CENCOSUD">Cencosud</option>
-    <option value="TOTTUS">Tottus</option>
-    <option value="METRO">Metro</option>
-    <option value="VIVANDA">Vivanda</option>
-    <option value="NO ESPECIFICADO">Otros</option>
-  </select>
-</div>
+  <!-- Leyenda -->
+  <div class="panel legend">
+    <h3 style="margin:0 0 8px 0"><i class="bi bi-info-circle"></i> Leyenda</h3>
+    <p><span class="dot" style="background:#E74C3C"></span>Supermercados Peruanos</p>
+    <p><span class="dot" style="background:#3498DB"></span>Cencosud</p>
+    <p><span class="dot" style="background:#27AE60"></span>Tottus</p>
+    <p><span class="dot" style="background:#F1C40F"></span>Metro</p>
+    <p><span class="dot" style="background:#E67E22"></span>Vivanda</p>
+    <p><span class="dot" style="background:#7F8C8D"></span>Otros</p>
+  </div>
 
-<!-- ✅ LEYENDA -->
-<div class="panel legend">
-  <h3 style="margin:0 0 8px 0"><i class="bi bi-info-circle"></i> Leyenda</h3>
-  <p><span class="dot" style="background:#E74C3C"></span>Supermercados Peruanos</p>
-  <p><span class="dot" style="background:#3498DB"></span>Cencosud</p>
-  <p><span class="dot" style="background:#27AE60"></span>Tottus</p>
-  <p><span class="dot" style="background:#F1C40F"></span>Metro</p>
-  <p><span class="dot" style="background:#E67E22"></span>Vivanda</p>
-  <p><span class="dot" style="background:#7F8C8D"></span>Otros</p>
-</div>
+  <!-- ✅ Scripts reales (IMPORTANTE: así, con <script>, NO como texto) -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
-<!-- ✅ Scripts reales (indispensable: NO texto suelto) -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script>
+  // ======================= MAPA =======================
+  const map = L.map("map").setView([-12.05, -77.05], 11);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+    attribution:"© OpenStreetMap"
+  }).addTo(map);
 
-<script>
-/* ======================= MAPA ======================= */
-const map = L.map("map").setView([-12.05, -77.05], 11);
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
-  attribution:"© OpenStreetMap"
-}).addTo(map);
+  const layerPins = L.layerGroup().addTo(map);
+  let ALL_POINTS = []; // {mk, nombre, dist, cli}
 
-const layerPins = L.layerGroup().addTo(map);
-let ALL_POINTS = []; // {mk, nombre, dist, cli}
+  // ======================= COLORES =======================
+  const COLORS = {
+    "SUPERMERCADOS PERUANOS":"#E74C3C", // rojo
+    "CENCOSUD":"#3498DB",               // azul
+    "TOTTUS":"#27AE60",                 // verde
+    "METRO":"#F1C40F",                  // amarillo
+    "VIVANDA":"#E67E22",                // naranja
+    "NO ESPECIFICADO":"#7F8C8D"         // gris
+  };
 
-/* ======================= COLORES ======================= */
-const COLORS = {
-  "SUPERMERCADOS PERUANOS":"#E74C3C", // rojo
-  "CENCOSUD":"#3498DB",               // azul
-  "TOTTUS":"#27AE60",                 // verde
-  "METRO":"#F1C40F",                  // amarillo
-  "VIVANDA":"#E67E22",                // naranja
-  "NO ESPECIFICADO":"#7F8C8D"         // gris
-};
+  function pin(color){
+    const svg = `
+    <svg xmlns='http://www.w3.org/2000/svg' width='26' height='38'>
+      <path d='M13 0C5.8 0 0 5.8 0 13c0 10 13 25 13 25s13-15 13-25C26 5.8 20.2 0 13 0z' fill='${color}'/>
+      <circle cx='13' cy='13' r='6' fill='white'/>
+    </svg>`;
+    return L.icon({
+      iconUrl:"data:image/svg+xml;utf8,"+encodeURIComponent(svg),
+      iconSize:[26,38],iconAnchor:[13,38],popupAnchor:[0,-30]
+    });
+  }
 
-/* Icono pin SVG coloreable */
-function pin(color){
-  const svg = `
-  <svg xmlns='http://www.w3.org/2000/svg' width='26' height='38'>
-    <path d='M13 0C5.8 0 0 5.8 0 13c0 10 13 25 13 25s13-15 13-25C26 5.8 20.2 0 13 0z' fill='${color}'/>
-    <circle cx='13' cy='13' r='6' fill='white'/>
-  </svg>`;
-  return L.icon({
-    iconUrl:"data:image/svg+xml;utf8,"+encodeURIComponent(svg),
-    iconSize:[26,38],iconAnchor:[13,38],popupAnchor:[0,-30]
+  // ======================= Detección de cadena por NOMBRE =======================
+  function detectarCadenaPorNombre(nombre){
+    const n = String(nombre||"")
+      .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+      .replace(/\s+/g," ").trim().toUpperCase();
+
+    if(n.includes("TOTTUS")) return "TOTTUS";
+    if(n.includes("METRO"))  return "METRO";
+    if(n.includes("VIVANDA"))return "VIVANDA";
+    if(n.includes("WONG"))   return "CENCOSUD";
+    if(n.includes("PLAZA VEA") || n.includes("SUPER VEA") || n.includes("HIPER PLAZA VEA"))
+      return "SUPERMERCADOS PERUANOS";
+    return "NO ESPECIFICADO";
+  }
+
+  // ======================= Normalizar claves de fila =======================
+  function NK(row){
+    const out={};
+    for(const k in row){ out[String(k).trim().toUpperCase()] = row[k]; }
+    return out;
+  }
+
+  // Helper para leer columnas con nombres alternativos
+  function getCol(r, alternativas){
+    for(const key of alternativas){
+      if(r[key] !== undefined && r[key] !== null && String(r[key]).trim()!=="") return r[key];
+    }
+    return "";
+  }
+
+  // ======================= CARGAR CSV =======================
+  Papa.parse("tiendas.csv?v="+Date.now(),{
+    download:true,
+    header:true,
+    dynamicTyping:true,
+    skipEmptyLines:"greedy",
+    complete:(res)=>{
+
+      const distritos = new Set();
+      const cadenas   = new Set();
+      const marcadores = [];
+
+      (res.data||[]).forEach(row=>{
+        const R = NK(row);
+
+        // Lee usando variantes de nombre de columna (tolerante)
+        const nombre = getCol(R, ["NOMBRE","Nombre"]);
+        const dist   = getCol(R, ["DISTRITO","Distrito"]);
+        const lat    = parseFloat(getCol(R, ["LATITUD","Latitud"]));
+        const lng    = parseFloat(getCol(R, ["LONGITUD","Longitud"]));
+        const sumin  = String(getCol(R, ["C.SUMIN","C.Sumin"])).padStart(4,"0");
+
+        if(!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+        const cli = detectarCadenaPorNombre(nombre);
+        const color = COLORS[cli] || COLORS["NO ESPECIFICADO"];
+
+        const mk = L.marker([lat,lng], {icon:pin(color), title:nombre});
+        mk.bindPopup(
+          `<b>${nombre}</b><br>
+           <b>Cadena:</b> ${cli}<br>
+           <b>Distrito:</b> ${dist || "-"}<br>
+           <b>Sumin:</b> ${sumin || "-"}`
+        );
+
+        ALL_POINTS.push({mk, nombre, dist, cli});
+        layerPins.addLayer(mk);
+        marcadores.push(mk);
+
+        if(dist) distritos.add(dist);
+        cadenas.add(cli);
+      });
+
+      // Filtro de Distritos
+      const selD = document.getElementById("fDist");
+      selD.innerHTML = `<option value="all">Todos</option>` + [...distritos].sort().map(d=>`<option>${d}</option>`).join("");
+
+      // Filtro de Cadenas (dinámico + conserva “Todas”)
+      const selC = document.getElementById("fCadena");
+      const ordenCad = ["SUPERMERCADOS PERUANOS","CENCOSUD","TOTTUS","METRO","VIVANDA","NO ESPECIFICADO"];
+      selC.innerHTML = `<option value="all">Todas</option>` + ordenCad
+        .filter(c=>cadenas.has(c))
+        .map(c=>`<option value="${c}">${c==="NO ESPECIFICADO"?"Otros":c}</option>`).join("");
+
+      // Enfoque inicial
+      if(marcadores.length){
+        const g = L.featureGroup(marcadores);
+        map.fitBounds(g.getBounds().pad(0.2));
+      }
+    },
+    error:(err)=>{ console.error("PapaParse error:", err); alert("No se pudo leer tiendas.csv"); }
   });
-}
 
-/* ======================= Detección por NOMBRE ======================= */
-/* Robusto: quita acentos, espacios múltiples y usa mayúsculas */
-function detectarCadenaPorNombre(nombre){
-  const n = String(nombre||"")
+  // ======================= Filtros =======================
+  function aplicarFiltros(){
+    const d = document.getElementById("fDist").value;
+    const c = document.getElementById("fCadena").value;
+
+    layerPins.clearLayers();
+
+    const visibles = ALL_POINTS.filter(p=>{
+      const okDist = (d==="all") || (p.dist===d);
+      const okCad  = (c==="all") || (p.cli===c);
+      return okDist && okCad;
+    });
+
+    visibles.forEach(p=>layerPins.addLayer(p.mk));
+
+    if(visibles.length){
+      const g = L.featureGroup(visibles.map(p=>p.mk));
+      map.fitBounds(g.getBounds().pad(0.2));
+    }
+  }
+  document.getElementById("fDist").onchange = aplicarFiltros;
+  document.getElementById("fCadena").onchange = aplicarFiltros;
+  </script>
+</body>
+</html>
+``
