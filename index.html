@@ -148,10 +148,11 @@ document.addEventListener("DOMContentLoaded", () => {
   if(n.includes("WONG"))          return "CENCOSUD";
 
   if(n.includes("PLAZA VEA") || n.includes("SUPER VEA"))
-    return "SUPERMERCADOS PERUANOS";
+      return "SUPERMERCADOS PERUANOS";
 
   return "NO ESPECIFICADO";
 }
+
 
   let PUNTOS=[];
 
@@ -169,6 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const color  = COLORS[cliStd];
         const dist   = r["DISTRITO"];
         const sumin = String(r["C.SUMIN"] || r["SUMIN"] || "").padStart(4,"0");
+``
 
         const mk = L.marker([lat,lng], {icon:pin(color)});
         mk.bindPopup(`<b>${nombre}</b><br>${cliStd}<br>${dist}<br>${sumin}`);
