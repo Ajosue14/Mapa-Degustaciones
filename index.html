@@ -6,16 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- ✅ CSS reales -->
-  https://unpkg.com/leaflet@1.9.4/dist/leaflet.css
-  https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
 
   <style>
     html,body{margin:0;height:100%;}
     #map{width:100%;height:100%;}
-
     .panel{
       position:absolute;z-index:999;background:#fff;padding:14px;border-radius:12px;
-      border:1px solid #ddd;font-family:"Segoe UI",system-ui,-apple-system,Arial;
+      border:1px solid #ddd;font-family:"Segoe UI";
       box-shadow:0 4px 16px rgba(0,0,0,.12);
     }
     .filters{top:12px;left:12px;width:300px;}
@@ -27,222 +26,190 @@
 </head>
 
 <body>
-  <div id="map"></div>
 
-  <!-- Filtros -->
-  <div class="panel filters">
-    <h3 style="margin:0 0 8px 0"><i class="bi bi-sliders"></i> Filtros</h3>
+<div id="map"></div>
 
-    <div class="row">
-      <label><b>Distrito</b></label>
-      <select id="fDist"><option value="all">Cargando…</option></select>
-    </div>
+<!-- PANEL FILTROS -->
+<div class="panel filters">
+  <h3 style="margin:0 0 8px 0"><i class="bi bi-sliders"></i> Filtros</h3>
 
-    <div class="row">
-      <label><b>Cadena</b></label>
-      <select id="fCadena">
-        <option value="all">Todas</option>
-        <option value="SUPERMERCADOS PERUANOS">Supermercados Peruanos</option>
-        <option value="CENCOSUD">Cencosud</option>
-        <option value="TOTTUS">Tottus</option>
-        <option value="METRO">Metro</option>
-        <option value="VIVANDA">Vivanda</option>
-        <option value="NO ESPECIFICADO">Otros</option>
-      </select>
-    </div>
-
-    <div class="row">
-      <label><b>Nombre de tienda</b> (ej. “plaza vea”, “wong”, “san isidro”)</label>
-      <input id="fNombre" placeholder="Escribe y presiona Enter o espera 0.4s"/>
-    </div>
+  <div class="row">
+    <label><b>Distrito</b></label>
+    <select id="fDist"><option value="all">Cargando…</option></select>
   </div>
 
-  <!-- Leyenda -->
-  <div class="panel legend">
-    <h3 style="margin:0 0 8px 0"><i class="bi bi-info-circle"></i> Leyenda</h3>
-    <p><span class="dot" style="background:#E74C3C"></span>Supermercados Peruanos</p>
-    <p><span class="dot" style="background:#3498DB"></span>Cencosud</p>
-    <p><span class="dot" style="background:#27AE60"></span>Tottus</p>
-    <p><span class="dot" style="background:#F1C40F"></span>Metro</p>
-    <p><span class="dot" style="background:#E67E22"></span>Vivanda</p>
-    <p><span class="dot" style="background:#7F8C8D"></span>Otros</p>
+  <div class="row">
+    <label><b>Cadena</b></label>
+    <select id="fCadena">
+      <option value="all">Todas</option>
+      <option value="SUPERMERCADOS PERUANOS">Supermercados Peruanos</option>
+      <option value="CENCOSUD">Cencosud</option>
+      <option value="TOTTUS">Tottus</option>
+      <option value="METRO">Metro</option>
+      <option value="VIVANDA">Vivanda</option>
+      <option value="NO ESPECIFICADO">Otros</option>
+    </select>
   </div>
 
-  <!-- ✅ Scripts reales -->
-  https://unpkg.com/leaflet@1.9.4/dist/leaflet.js</script>
-  https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js</script>
+  <div class="row">
+    <label><b>Nombre de tienda</b></label>
+    <input id="fNombre" placeholder="Ej: plaza vea, wong, metro…" />
+  </div>
+</div>
 
-  <script>
-  /* ======================= MAPA ======================= */
-  const map = L.map("map").setView([-12.05, -77.05], 11);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
-    attribution:"© OpenStreetMap"
-  }).addTo(map);
+<!-- LEYENDA -->
+<div class="panel legend">
+  <h3 style="margin:0 0 8px 0"><i class="bi bi-info-circle"></i> Leyenda</h3>
+  <p><span class="dot" style="background:#E74C3C"></span>Supermercados Peruanos</p>
+  <p><span class="dot" style="background:#3498DB"></span>Cencosud</p>
+  <p><span class="dot" style="background:#27AE60"></span>Tottus</p>
+  <p><span class="dot" style="background:#F1C40F"></span>Metro</p>
+  <p><span class="dot" style="background:#E67E22"></span>Vivanda</p>
+  <p><span class="dot" style="background:#7F8C8D"></span>Otros</p>
+</div>
 
-  const layerPins = L.layerGroup().addTo(map);
-  let ALL_POINTS = []; // {mk, nombre, dist, cli}
+<!-- ✅ SCRIPTS REALES (así debe verse SIEMPRE) -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
-  /* ======================= COLORES ======================= */
-  const COLORS = {
-    "SUPERMERCADOS PERUANOS":"#E74C3C", // rojo
-    "CENCOSUD":"#3498DB",               // azul
-    "TOTTUS":"#27AE60",                 // verde
-    "METRO":"#F1C40F",                  // amarillo
-    "VIVANDA":"#E67E22",                // naranja
-    "NO ESPECIFICADO":"#7F8C8D"         // gris
-  };
+<script>
+/* ======================= MAPA ======================= */
+const map = L.map("map").setView([-12.05, -77.05], 11);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+  attribution:"© OpenStreetMap"
+}).addTo(map);
 
-  function pin(color){
-    const svg = `
-    <svg xmlns='http://www.w3.org/2000/svg' width='26' height='38'>
-      <path d='M13 0C5.8 0 0 5.8 0 13c0 10 13 25 13 25s13-15 13-25C26 5.8 20.2 0 13 0z' fill='${color}'/>
-      <circle cx='13' cy='13' r='6' fill='white'/>
-    </svg>`;
-    return L.icon({
-      iconUrl:"data:image/svg+xml;utf8,"+encodeURIComponent(svg),
-      iconSize:[26,38],iconAnchor:[13,38],popupAnchor:[0,-30]
-    });
-  }
+const layerPins = L.layerGroup().addTo(map);
+let ALL_POINTS = [];
 
-  /* ======================= Detección por NOMBRE ======================= */
-  function detectarCadenaPorNombre(nombre){
-    const n = String(nombre||"")
-      .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-      .replace(/\s+/g," ").trim().toUpperCase();
+/* ======================= COLORES ======================= */
+const COLORS = {
+  "SUPERMERCADOS PERUANOS":"#E74C3C",
+  "CENCOSUD":"#3498DB",
+  "TOTTUS":"#27AE60",
+  "METRO":"#F1C40F",
+  "VIVANDA":"#E67E22",
+  "NO ESPECIFICADO":"#7F8C8D"
+};
 
-    // 🔴 Supermercados Peruanos (más robusto: incluye literal)
-    if(n.includes("SUPERMERCADOS PERUANOS")) return "SUPERMERCADOS PERUANOS";
-    if(n.includes("PLAZA VEA") || n.includes("SUPER VEA") || n.includes("HIPER PLAZA VEA"))
-      return "SUPERMERCADOS PERUANOS";
-
-    // 🔵 Cencosud
-    if(n.includes("WONG"))   return "CENCOSUD";
-
-    // 🟡 🟠 🟢
-    if(n.includes("METRO"))  return "METRO";
-    if(n.includes("VIVANDA"))return "VIVANDA";
-    if(n.includes("TOTTUS")) return "TOTTUS";
-
-    return "NO ESPECIFICADO";
-  }
-
-  /* ======================= Normalizar claves ======================= */
-  function NK(row){
-    const out={};
-    for(const k in row){ out[String(k).trim().toUpperCase()] = row[k]; }
-    return out;
-  }
-
-  // Helper para leer columnas con distintas variantes
-  function getCol(r, alternativas){
-    for(const key of alternativas){
-      if(r[key] !== undefined && r[key] !== null && String(r[key]).trim()!=="") return r[key];
-    }
-    return "";
-  }
-
-  /* ======================= CARGAR CSV ======================= */
-  Papa.parse("tiendas.csv?v="+Date.now(),{
-    download:true,
-    header:true,
-    dynamicTyping:true,
-    skipEmptyLines:"greedy",
-    complete:(res)=>{
-
-      const distritos = new Set();
-      const cadenas   = new Set();
-      const marcadores = [];
-
-      (res.data||[]).forEach(row=>{
-        const R = NK(row);
-
-        const nombre = getCol(R, ["NOMBRE","Nombre"]);
-        const dist   = getCol(R, ["DISTRITO","Distrito"]);
-        const lat    = parseFloat(getCol(R, ["LATITUD","Latitud"]));
-        const lng    = parseFloat(getCol(R, ["LONGITUD","Longitud"]));
-        const sumin  = String(getCol(R, ["C.SUMIN","C.Sumin"])).padStart(4,"0");
-
-        if(!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-
-        const cli = detectarCadenaPorNombre(nombre);
-        const color = COLORS[cli] || COLORS["NO ESPECIFICADO"];
-
-        const mk = L.marker([lat,lng], {icon:pin(color), title:nombre});
-        mk.bindPopup(
-          `<b>${nombre}</b><br>
-           <b>Cadena:</b> ${cli}<br>
-           <b>Distrito:</b> ${dist || "-"}<br>
-           <b>Sumin:</b> ${sumin || "-"}`
-        );
-
-        ALL_POINTS.push({mk, nombre, dist, cli});
-        layerPins.addLayer(mk);
-        marcadores.push(mk);
-
-        if(dist) distritos.add(dist);
-        cadenas.add(cli);
-      });
-
-      // Cargar opciones de Distrito
-      const selD = document.getElementById("fDist");
-      selD.innerHTML = `<option value="all">Todos</option>` + [...distritos].sort().map(d=>`<option>${d}</option>`).join("");
-
-      // Cargar opciones de Cadena (dinámico, respetando orden deseado)
-      const selC = document.getElementById("fCadena");
-      const ordenCad = ["SUPERMERCADOS PERUANOS","CENCOSUD","TOTTUS","METRO","VIVANDA","NO ESPECIFICADO"];
-      selC.innerHTML = `<option value="all">Todas</option>` + ordenCad
-        .filter(c=>cadenas.has(c))
-        .map(c=>`<option value="${c}">${c==="NO ESPECIFICADO"?"Otros":c}</option>`).join("");
-
-      // Enfoque inicial
-      if(marcadores.length){
-        const g = L.featureGroup(marcadores);
-        map.fitBounds(g.getBounds().pad(0.2));
-      }
-    },
-    error:(err)=>{ console.error("PapaParse error:", err); alert("No se pudo leer tiendas.csv"); }
+/* ICONO PIN */
+function pin(color){
+  const svg = `
+  <svg xmlns='http://www.w3.org/2000/svg' width='26' height='38'>
+    <path d='M13 0C5.8 0 0 5.8 0 13c0 10 13 25 13 25s13-15 13-25C26 5.8 20.2 0 13 0z' fill='${color}'/>
+    <circle cx='13' cy='13' r='6' fill='white'/>
+  </svg>`;
+  return L.icon({
+    iconUrl:"data:image/svg+xml;utf8,"+encodeURIComponent(svg),
+    iconSize:[26,38],iconAnchor:[13,38],popupAnchor:[0,-30]
   });
+}
 
-  /* ======================= APLICAR FILTROS (Distrito, Cadena, Nombre) ======================= */
-  function aplicarFiltros(){
-    const d = document.getElementById("fDist").value;
-    const c = document.getElementById("fCadena").value;
-    const q = document.getElementById("fNombre").value.toLowerCase().trim();
+/* DETECCIÓN POR NOMBRE (MEJORADO) */
+function detectarCadena(nombre){
+  const n = String(nombre||"")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .toUpperCase();
 
-    layerPins.clearLayers();
+  if(n.includes("SUPERMERCADOS PERUANOS")) return "SUPERMERCADOS PERUANOS";
+  if(n.includes("PLAZA VEA") || n.includes("SUPER VEA") || n.includes("HIPER PLAZA VEA"))
+    return "SUPERMERCADOS PERUANOS";
+  if(n.includes("WONG")) return "CENCOSUD";
+  if(n.includes("TOTTUS")) return "TOTTUS";
+  if(n.includes("METRO"))  return "METRO";
+  if(n.includes("VIVANDA"))return "VIVANDA";
+  return "NO ESPECIFICADO";
+}
 
-    const visibles = ALL_POINTS.filter(p=>{
-      const okDist = (d==="all") || (p.dist===d);
-      const okCad  = (c==="all") || (p.cli===c);
-      const okNom  = (!q) || (p.nombre && p.nombre.toLowerCase().includes(q));
-      return okDist && okCad && okNom;
+/* NORMALIZAR FILA */
+function NK(row){
+  const out={};
+  for(const k in row){ out[k.trim().toUpperCase()] = row[k]; }
+  return out;
+}
+
+function getCol(r, list){
+  for(const key of list){
+    if(r[key] !== undefined && String(r[key]).trim() !== "") return r[key];
+  }
+  return "";
+}
+
+/* ==========================================
+   ============ CARGAR CSV ==================
+   ========================================== */
+Papa.parse("tiendas.csv?v="+Date.now(),{
+  download:true,
+  header:true,
+  dynamicTyping:true,
+  skipEmptyLines:"greedy",
+  complete:(res)=>{
+
+    const distritos = new Set();
+    const cadenas = new Set();
+    const markers = [];
+
+    (res.data||[]).forEach(row=>{
+      const R = NK(row);
+
+      const nombre = getCol(R, ["NOMBRE","Nombre"]);
+      const dist   = getCol(R, ["DISTRITO","Distrito"]);
+      const lat    = parseFloat(getCol(R, ["LATITUD","Latitud"]));
+      const lng    = parseFloat(getCol(R, ["LONGITUD","Longitud"]));
+      const sumin  = String(getCol(R, ["C.SUMIN","C.Sumin"])).padStart(4,"0");
+
+      if(!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+      const cli = detectarCadena(nombre);
+      const mk = L.marker([lat,lng], {icon:pin(COLORS[cli]), title:nombre});
+      mk.bindPopup(`<b>${nombre}</b><br>Cadena: ${cli}<br>Distrito: ${dist}<br>Suministro: ${sumin}`);
+
+      ALL_POINTS.push({mk, nombre, dist, cli});
+      layerPins.addLayer(mk);
+      markers.push(mk);
+
+      if(dist) distritos.add(dist);
+      cadenas.add(cli);
     });
 
-    visibles.forEach(p=>layerPins.addLayer(p.mk));
+    // Distritos
+    document.getElementById("fDist").innerHTML =
+      `<option value="all">Todos</option>` +
+      [...distritos].sort().map(d=>`<option>${d}</option>`).join("");
 
-    if(visibles.length){
-      const g = L.featureGroup(visibles.map(p=>p.mk));
+    // Cadena dinámica
+    const orden = ["SUPERMERCADOS PERUANOS","CENCOSUD","TOTTUS","METRO","VIVANDA","NO ESPECIFICADO"];
+    document.getElementById("fCadena").innerHTML =
+      `<option value="all">Todas</option>` +
+      orden.filter(c=>cadenas.has(c))
+           .map(c=>`<option value="${c}">${c==="NO ESPECIFICADO"?"Otros":c}</option>`).join("");
+
+    // Ajustar mapa
+    if(markers.length){
+      const g = L.featureGroup(markers);
       map.fitBounds(g.getBounds().pad(0.2));
     }
   }
+});
 
-  // Eventos de filtros
-  document.getElementById("fDist").onchange = aplicarFiltros;
-  document.getElementById("fCadena").onchange = aplicarFiltros;
+/* ==========================================
+   ============ FILTROS ======================
+   ========================================== */
+function aplicarFiltros(){
+  const dist = document.getElementById("fDist").value;
+  const cad  = document.getElementById("fCadena").value;
+  const q    = document.getElementById("fNombre").value.toLowerCase().trim();
 
-  // Nombre: Enter o debounce 400ms
-  (()=>{
-    const input = document.getElementById("fNombre");
-    let t=null;
-    input.addEventListener("keydown", e=>{
-      if(e.key==="Enter"){ e.preventDefault(); aplicarFiltros(); }
-    });
-    input.addEventListener("input", ()=>{
-      clearTimeout(t);
-      t = setTimeout(aplicarFiltros, 400);
-    });
-  })();
-  </script>
-</body>
-</html>
-``
+  layerPins.clearLayers();
+
+  const visibles = ALL_POINTS.filter(p=>{
+    const okD = (dist==="all") || (p.dist===dist);
+    const okC = (cad ==="all") || (p.cli===cad);
+    const okN = !q || p.nombre.toLowerCase().includes(q);
+    return okD && okC && okN;
+  });
+
+  visibles.forEach(p=>layerPins.addLayer(p.mk));
+
+  if(visibles.length){
+    const g = L.feature
