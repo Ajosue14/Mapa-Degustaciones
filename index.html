@@ -5,9 +5,8 @@
 <title>Mapa PRO</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<!-- ✅ CSS reales -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+https://unpkg.com/leaflet@1.9.4/dist/leaflet.css
+https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css
 
 <style>
   :root{
@@ -17,11 +16,8 @@
   }
   html,body{margin:0;height:100%;}
   #map{width:100%;height:100%;}
-
-  /* baja el zoom para no chocar con FAB */
   .leaflet-top.leaflet-left{ top:80px; }
 
-  /* Paneles */
   .panel{
     position:absolute; z-index:999; background:var(--panel-bg); color:var(--text);
     border:1px solid var(--panel-br); border-radius:14px; padding:14px;
@@ -40,7 +36,6 @@
   }
   .btn-plain{background:#f2f2f2;color:#333;}
 
-  /* FABs */
   .fab{
     position:absolute;z-index:1000;width:48px;height:48px;border-radius:50%;
     background:var(--fab-bg);color:var(--fab-tx);display:grid;place-items:center;
@@ -64,11 +59,9 @@
 
 <div id="map"></div>
 
-<!-- FABs -->
 <button id="openFilters" class="fab fab-left"><i class="bi bi-sliders"></i></button>
 <button id="openSearch" class="fab fab-right"><i class="bi bi-search"></i></button>
 
-<!-- Panel FILTROS -->
 <div id="panelFilters" class="panel filters collapsed">
   <button class="btn-close" id="closeFilters"><i class="bi bi-x"></i></button>
   <h3>Filtros</h3>
@@ -79,7 +72,6 @@
   <p id="count"></p>
 </div>
 
-<!-- Panel BUSCAR -->
 <div id="panelSearch" class="panel search collapsed">
   <button class="btn-close" id="closeSearch"><i class="bi bi-x"></i></button>
   <h3>Buscar</h3>
@@ -88,7 +80,6 @@
   <button id="btnLimpiar" class="btn-plain">Limpiar</button>
 </div>
 
-<!-- LEYENDA -->
 <div class="panel legend">
   <h3>Leyenda</h3>
   <p><span class="dot" style="background:#E74C3C"></span>Supermercados Peruanos</p>
@@ -99,20 +90,18 @@
   <p><span class="dot" style="background:#7F8C8D"></span>Otros</p>
 </div>
 
-<!-- ✅ Scripts reales -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+https://unpkg.com/leaflet@1.9.4/dist/leaflet.js
+https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
-  /* MAPA */
   const map = L.map("map").setView([-12.05,-77.05], 11);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
   const layerPins = L.layerGroup().addTo(map);
 
-  /* PALETA DE COLORES */
+  /* COLORES */
   const COLORS = {
     "SUPERMERCADOS PERUANOS":"#E74C3C",
     "CENCOSUD":"#3498DB",
@@ -122,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
     "NO ESPECIFICADO":"#7F8C8D"
   };
 
-  /* ICONO PIN SVG */
+  /* PIN SVG */
   function pin(color){
     const svg = `
       <svg xmlns='http://www.w3.org/2000/svg' width='26' height='38'>
@@ -135,7 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /* NORMALIZAR CLAVES */
+  /* NORMALIZAR FILAS */
   function NK(r){
     const out={};
     for(const k in r){
@@ -144,11 +133,10 @@ document.addEventListener("DOMContentLoaded", () => {
     return out;
   }
 
-  /* ✅ DETECTAR CADENA SOLO POR NOMBRE (ROBUSTO PARA TU CSV) */
+  /* ✅ DETECTAR CADENA SOLO POR NOMBRE REAL */
   function stdClient(nombre){
     const n = String(nombre||"")
       .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-      .replace(/\s+/g," ")
       .toUpperCase();
 
     if(n.includes("TOTTUS")) return "TOTTUS";
@@ -168,19 +156,19 @@ document.addEventListener("DOMContentLoaded", () => {
   Papa.parse("tiendas.csv?v="+Date.now(),{
     download:true, header:true, dynamicTyping:true,
     complete:(res)=>{
-      res.data.forEach(r0=>{
-        const r = NK(r0);
+      res.data.forEach(row=>{
+        const r = NK(row);
 
-        const nombre = r["NOMBRE"];
+        const nombre = r["NOMBRE"] || r["NOMBRE "] || "";
         const dist   = r["DISTRITO"];
         const lat    = parseFloat(r["LATITUD"]);
         const lng    = parseFloat(r["LONGITUD"]);
+        const sumin  = String(r["C.SUMIN"] || "").padStart(4,"0");
 
         if(!lat||!lng) return;
 
         const cliStd = stdClient(nombre);
         const color  = COLORS[cliStd];
-        const sumin  = String(r["C.SUMIN"] || "").padStart(4,"0");
 
         const mk = L.marker([lat,lng], {icon:pin(color)});
         mk.bindPopup(`<b>${nombre}</b><br>${cliStd}<br>${dist}<br>${sumin}`);
@@ -209,6 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const visibles = (dist==="all") ? PUNTOS : PUNTOS.filter(p=>p.dist===dist);
     visibles.forEach(p=>layerPins.addLayer(p.mk));
   }
+
   document.getElementById("fDist").onchange=aplicarDistrito;
 
   /* BUSCAR */
@@ -242,4 +231,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
-``
