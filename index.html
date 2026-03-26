@@ -136,20 +136,22 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function stdClient(nombre, clienteRaw){
-    const c = String(clienteRaw||"").toUpperCase();  // ✅ FIX AQUÍ
-    const n = String(nombre||"").toUpperCase();
+  const c = String(clienteRaw || "").toUpperCase();
+  const n = String(nombre || "").toUpperCase();
 
-    if(c.includes("SUPERMERCADOS")) return "SUPERMERCADOS PERUANOS";
-    if(c.includes("CENCOSUD"))      return "CENCOSUD";
-    if(c.includes("TOTTUS"))        return "TOTTUS";
-    if(n.includes("METRO"))         return "METRO";
-    if(n.includes("VIVANDA"))       return "VIVANDA";
-    if(n.includes("WONG"))          return "CENCOSUD";
-    if(n.includes("PLAZA VEA") || n.includes("SUPER VEA"))
-      return "SUPERMERCADOS PERUANOS";
+  if(c.includes("SUPERMERCADOS")) return "SUPERMERCADOS PERUANOS";
+  if(c.includes("CENCOSUD"))      return "CENCOSUD";
+  if(c.includes("TOTTUS"))        return "TOTTUS";
 
-    return "NO ESPECIFICADO";
-  }
+  if(n.includes("METRO"))         return "METRO";
+  if(n.includes("VIVANDA"))       return "VIVANDA";
+  if(n.includes("WONG"))          return "CENCOSUD";
+
+  if(n.includes("PLAZA VEA") || n.includes("SUPER VEA"))
+    return "SUPERMERCADOS PERUANOS";
+
+  return "NO ESPECIFICADO";
+}
 
   let PUNTOS=[];
 
@@ -166,7 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const cliStd = stdClient(nombre, r["CLIENTE"]);
         const color  = COLORS[cliStd];
         const dist   = r["DISTRITO"];
-        const sumin  = String(r["C.SUMIN"] || r["SUMIN"] || "").padStart(4,"0");
+        const sumin = String(r["C.SUMIN"] || r["SUMIN"] || "").padStart(4,"0");
 
         const mk = L.marker([lat,lng], {icon:pin(color)});
         mk.bindPopup(`<b>${nombre}</b><br>${cliStd}<br>${dist}<br>${sumin}`);
