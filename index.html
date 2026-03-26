@@ -3,24 +3,29 @@
 <head>
   <meta charset="utf-8" />
   <title>Mapa PRO</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  https://unpkg.com/leaflet@1.9.4/dist/leaflet.css
-  https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css
-  https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css
-  https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css
+  <!-- ESTILOS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+  <link rel="stylesheet" href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
-  https://unpkg.com/leaflet@1.9.4/dist/leaflet.js
-  https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js</script>
-  https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js</script>
+  <!-- SCRIPTS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
   <style>
-    html, body { margin: 0; height: 100%; }
-    #map { width: 100%; height: 100%; }
-    .panel { position: absolute; z-index: 999; background: white; padding: 14px; border-radius: 14px; }
-    .search { top: 10px; right: 10px; width: 280px; }
-    .filters { top: 10px; left: 10px; width: 250px; }
-    .legend { bottom: 10px; left: 10px; width: 250px; }
+    html, body { margin:0; height:100%; }
+    #map { width:100%; height:100%; }
+    .panel{
+      position:absolute; z-index:999; background:white; padding:14px; border-radius:14px;
+      box-shadow:0 10px 30px rgba(0,0,0,.15); font-family:"Segoe UI";
+    }
+    .search{ top:10px; right:10px; width:280px; }
+    .filters{ top:10px; left:10px; width:250px; }
+    .legend{ bottom:10px; left:10px; width:250px; }
   </style>
 </head>
 
@@ -29,14 +34,14 @@
 <div id="map"></div>
 
 <div class="panel search">
-  <h3>Buscar</h3>
+  <h3><i class="bi bi-search"></i> Buscar</h3>
   <input id="q" placeholder="Nombre o suministro">
   <button id="btnBuscar">Buscar</button>
   <button id="btnLimpiar">Limpiar</button>
 </div>
 
 <div class="panel filters">
-  <h3>Filtros</h3>
+  <h3><i class="bi bi-sliders"></i> Filtros</h3>
   <label>Distrito</label>
   <select id="fDist"><option value="all">Todos</option></select><br><br>
 
@@ -49,7 +54,7 @@
 </div>
 
 <div class="panel legend">
-  <h3>Leyenda</h3>
+  <h3><i class="bi bi-info-circle"></i> Leyenda</h3>
   <p>Supermercados Peruanos</p>
   <p>Cencosud</p>
   <p>Tottus</p>
@@ -59,34 +64,25 @@
 </div>
 
 <script>
-// ========== MAPA ==========
+// ================= MAPA =================
 const map = L.map("map").setView([-12.05, -77.05], 11);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 const cluster = L.markerClusterGroup();
 map.addLayer(cluster);
 
-// ========== COLORES ==========
+// colores
 const COLORS = {
-  "SUPERMERCADOS PERUANOS": "#E74C3C",
-  "CENCOSUD": "#3498DB",
-  "TOTTUS": "#27AE60",
-  "METRO": "#F1C40F",
-  "VIVANDA": "#E67E22",
-  "NO ESPECIFICADO": "#7F8C8D"
+  "SUPERMERCADOS PERUANOS":"#E74C3C",
+  "CENCOSUD":"#3498DB",
+  "TOTTUS":"#27AE60",
+  "METRO":"#F1C40F",
+  "VIVANDA":"#E67E22",
+  "NO ESPECIFICADO":"#7F8C8D"
 };
 
-// ========== ICONO ==========
-function icon(color){
-  return L.icon({
-    iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
-    iconSize: [25, 41],
-    iconAnchor: [12, 41]
-  });
-}
-
-// ========== DETECTAR CLIENTE ==========
+// detectar cadena
 function detectarCliente(nombre){
-  const n = (nombre || "").toUpperCase();
+  const n = (nombre||"").toUpperCase();
   if(n.includes("TOTTUS")) return "TOTTUS";
   if(n.includes("METRO")) return "METRO";
   if(n.includes("VIVANDA")) return "VIVANDA";
@@ -95,26 +91,52 @@ function detectarCliente(nombre){
   return "NO ESPECIFICADO";
 }
 
-// ========== LEER CSV ==========
+// normalizar cabeceras
+function normKeys(row){
+  const out = {};
+  for(const k in row){
+    const nk = String(k).trim().toUpperCase();
+    out[nk] = row[k];
+  }
+  return out;
+}
+
+// ================= LEER CSV =================
 let PUNTOS = [];
-Papa.parse("tiendas.csv", {
-  download: true,
-  header: true,
-  dynamicTyping: true,
-  complete: function(res){
-    console.log(res.data);
-    res.data.forEach(s=>{
-      if(!s.Latitud || !s.Longitud) return;
 
-      const cli = detectarCliente(s.Nombre);
-      const mk = L.marker([s.Latitud, s.Longitud], {icon: icon(COLORS[cli])});
-      mk.bindPopup(s.Nombre);
+Papa.parse("tiendas.csv?v="+Date.now(), {
+  download:true,
+  header:true,
+  dynamicTyping:true,
+  complete:function(res){
 
-      PUNTOS.push({mk, cli});
+    console.log("CSV:", res.data);  // <-- esto nos confirmará si lee filas
+
+    res.data.forEach(raw=>{
+      const r = normKeys(raw);
+
+      const nombre = r["NOMBRE"];
+      const cliente = detectarCliente(nombre);
+      const lat = parseFloat(r["LATITUD"]);
+      const lng = parseFloat(r["LONGITUD"]);
+      const dist = r["DISTRITO"];
+
+      if(!lat || !lng) return;
+
+      const marker = L.marker([lat,lng]);
+      marker.bindPopup(nombre);
+
+      PUNTOS.push({mk:marker, cli:cliente, dist});
     });
 
-    PUNTOS.forEach(p => cluster.addLayer(p.mk));
+    // poner pines
+    PUNTOS.forEach(p=> cluster.addLayer(p.mk));
     document.getElementById("count").innerText = PUNTOS.length + " tiendas";
+
+    // llenar distritos
+    const sel = document.getElementById("fDist");
+    const dists = [...new Set(PUNTOS.map(p=>p.dist))].sort();
+    sel.innerHTML = `<option value="all">Todos</option>` + dists.map(d=>`<option>${d}</option>`).join("");
   }
 });
 </script>
