@@ -5,7 +5,7 @@
   <title>Mapa PRO</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- ESTILOS REALES -->
+  <!-- CSS REAL -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
@@ -13,39 +13,51 @@
     :root{
       --panel-bg:#fff; --panel-br:rgba(0,0,0,.06);
       --shadow:0 10px 30px rgba(0,0,0,.15); --text:#102a43;
-      --fab-bg:#0f172a; --fab-tx:#e2e8f0;
+      --fab-bg:#ffffff; --fab-tx:#111;
     }
     html, body{ margin:0; height:100%; }
     #map{ width:100%; height:100%; }
+
+    /* PANEL */
     .panel{
       position:absolute; z-index:999; background:var(--panel-bg); color:var(--text);
       border:1px solid var(--panel-br); padding:14px; border-radius:14px;
-      font-family:"Segoe UI", Arial; box-shadow:var(--shadow);
-      transition:transform .25s ease, opacity .25s ease, visibility .25s;
+      font-family:"Segoe UI"; box-shadow:var(--shadow);
+      transition: transform .25s ease, opacity .25s ease, visibility .25s;
     }
-    .filters{ top:12px; left:12px; width:270px; }
-    .search{ top:12px; right:12px; width:270px; }
+    .filters{ top:70px; left:12px; width:260px; }
+    .search{ top:70px; right:12px; width:260px; }
     .collapsed{ transform:translateY(-20px); opacity:0; visibility:hidden; }
+
     .legend{ bottom:12px; left:12px; width:240px; }
-    input, select{ width:100%; padding:9px; border-radius:10px; border:1px solid #ccc; margin-top:8px; }
+
+    input, select{ width:100%; padding:10px; border-radius:10px; border:1px solid #ccc; margin-top:8px; }
     button{
-      width:100%; padding:10px; margin-top:8px; border:none; border-radius:10px; cursor:pointer;
-      background:linear-gradient(135deg,#0078D7,#2196F3); color:#fff; font-weight:700;
+      width:100%; padding:10px; border:none; border-radius:10px; cursor:pointer;
+      background:linear-gradient(135deg,#0078D7,#2196F3); color:#fff; font-weight:bold;
+      margin-top:8px;
     }
     .btn-plain{ background:#f2f2f2; color:#333; }
+
+    /* FAB buttons */
     .fab{
       position:absolute; z-index:1000; width:46px; height:46px;
       background:var(--fab-bg); color:var(--fab-tx);
-      border-radius:50%; display:grid; place-items:center; cursor:pointer;
-      box-shadow:0 10px 25px rgba(0,0,0,.25);
+      border-radius:50%; display:grid; place-items:center;
+      cursor:pointer; border:1px solid #ccc;
+      box-shadow:0 8px 14px rgba(0,0,0,.25);
     }
     .fab-left{ left:12px; top:12px; }
     .fab-right{ right:12px; top:12px; }
-    .dot{ width:12px; height:12px; border-radius:50%; display:inline-block; margin-right:6px; }
+
     .btn-close{
       position:absolute; right:10px; top:10px;
-      width:26px; height:26px; border:none; border-radius:50%;
-      background:#f1f1f1; display:grid; place-items:center; cursor:pointer;
+      width:26px; height:26px; background:#eee; border:none;
+      border-radius:50%; display:grid; place-items:center; cursor:pointer;
+    }
+
+    .dot{
+      width:12px; height:12px; background:red; border-radius:50%; display:inline-block; margin-right:6px;
     }
   </style>
 </head>
@@ -54,25 +66,23 @@
 
 <div id="map"></div>
 
-<!-- BOTONES FLOTANTES PARA ABRIR PANELS -->
+<!-- FABs -->
 <button id="openFilters" class="fab fab-left"><i class="bi bi-sliders"></i></button>
-<button id="openSearch"  class="fab fab-right"><i class="bi bi-search"></i></button>
+<button id="openSearch" class="fab fab-right"><i class="bi bi-search"></i></button>
 
 <!-- PANEL FILTROS -->
 <div id="panelFilters" class="panel filters collapsed">
   <button class="btn-close" id="closeFilters"><i class="bi bi-x"></i></button>
-  <h3><i class="bi bi-sliders"></i> Filtros</h3>
-
+  <h3>Filtros</h3>
   <label>Distrito</label>
   <select id="fDist"><option value="all">Todos</option></select>
-
-  <p id="count" style="margin-top:10px;"></p>
+  <p id="count"></p>
 </div>
 
 <!-- PANEL BUSCAR -->
 <div id="panelSearch" class="panel search collapsed">
   <button class="btn-close" id="closeSearch"><i class="bi bi-x"></i></button>
-  <h3><i class="bi bi-search"></i> Buscar</h3>
+  <h3>Buscar</h3>
   <input id="q" placeholder="Nombre o suministro">
   <button id="btnBuscar">Buscar</button>
   <button id="btnLimpiar" class="btn-plain">Limpiar</button>
@@ -80,7 +90,7 @@
 
 <!-- LEYENDA -->
 <div class="panel legend">
-  <h3><i class="bi bi-info-circle"></i> Leyenda</h3>
+  <h3>Leyenda</h3>
   <p><span class="dot" style="background:#E74C3C"></span>Supermercados Peruanos</p>
   <p><span class="dot" style="background:#3498DB"></span>Cencosud</p>
   <p><span class="dot" style="background:#27AE60"></span>Tottus</p>
@@ -89,20 +99,18 @@
   <p><span class="dot" style="background:#7F8C8D"></span>Otros</p>
 </div>
 
-<!-- JS REALES -->
+<!-- JS REAL -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
 <script>
-// ===================== MAPA ==========================
+// =================== MAPA ===================
 const map = L.map("map").setView([-12.05,-77.05], 11);
-L.tileLayer("https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png", {
-  attribution:"© OpenStreetMap contributors"
-}).addTo(map);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
 const layerPins = L.layerGroup().addTo(map);
 
-// ===================== COLORES ==========================
+// =================== COLORES ===================
 const COLORS = {
   "SUPERMERCADOS PERUANOS":"#E74C3C",
   "CENCOSUD":"#3498DB",
@@ -111,6 +119,16 @@ const COLORS = {
   "VIVANDA":"#E67E22",
   "NO ESPECIFICADO":"#7F8C8D"
 };
+
+function detectarCliente(n){
+  n=(n||"").toUpperCase();
+  if(n.includes("TOTTUS")) return "TOTTUS";
+  if(n.includes("METRO")) return "METRO";
+  if(n.includes("VIVANDA")) return "VIVANDA";
+  if(n.includes("WONG")) return "CENCOSUD";
+  if(n.includes("PLAZA")||n.includes("VEA")) return "SUPERMERCADOS PERUANOS";
+  return "NO ESPECIFICADO";
+}
 
 function pin(color){
   const svg = `
@@ -124,112 +142,85 @@ function pin(color){
   });
 }
 
-// ===================== NORMALIZACIÓN CSV ==========================
-function normKeys(r){
+function norm(r){
   const o={};
   for(const k in r){
-    const nk = String(k).replace(/\uFEFF/g,"").replace(/\u00A0/g," ").trim().toUpperCase();
-    o[nk]=r[k];
+    o[String(k).trim().toUpperCase()] = r[k];
   }
   return o;
 }
-function detectarCliente(n){
-  n = (n||"").toUpperCase();
-  if(n.includes("TOTTUS")) return "TOTTUS";
-  if(n.includes("METRO")) return "METRO";
-  if(n.includes("VIVANDA")) return "VIVANDA";
-  if(n.includes("WONG")) return "CENCOSUD";
-  if(n.includes("PLAZA") || n.includes("VEA")) return "SUPERMERCADOS PERUANOS";
-  return "NO ESPECIFICADO";
-}
-function pad4(v){
-  if(v==null) return "";
-  const s=String(v).trim();
-  return /^\d+$/.test(s)? s.padStart(4,"0") : s;
-}
 
-// ===================== CARGA DE TIENDAS ==========================
-let PUNTOS = [];
+let PUNTOS=[];
 
+// =================== CARGAR CSV ===================
 Papa.parse("tiendas.csv?v="+Date.now(),{
-  download:true,
-  header:true,
-  dynamicTyping:true,
+  download:true, header:true, dynamicTyping:true,
   complete:(res)=>{
-    const raw = res.data||[];
-    raw.forEach(r0=>{
-      const r = normKeys(r0);
-      const nombre = r["NOMBRE"];
-      const cli    = detectarCliente(nombre);
-      const dist   = r["DISTRITO"];
-      const lat    = parseFloat(r["LATITUD"]);
-      const lng    = parseFloat(r["LONGITUD"]);
-      const sumin  = pad4(r["C.SUMIN"]||r["SUMIN"]||r["SUM"]);
+    res.data.forEach(r0=>{
+      const r=norm(r0);
+      const nombre=r["NOMBRE"];
+      const cliente=detectarCliente(nombre);
+      const dist=r["DISTRITO"];
+      const lat=parseFloat(r["LATITUD"]);
+      const lng=parseFloat(r["LONGITUD"]);
+      const sumin=r["C.SUMIN"]||r["SUMIN"]||"";
 
-      if(!Number.isFinite(lat)||!Number.isFinite(lng)) return;
+      if(!lat||!lng) return;
 
-      const mk = L.marker([lat,lng], {icon:pin(COLORS[cli]), title:nombre});
-      mk.bindPopup(`<b>${nombre}</b><br><b>Cliente:</b> ${cli}<br><b>Distrito:</b> ${dist}<br><b>Suministro:</b> ${sumin}`);
+      const mk=L.marker([lat,lng],{icon:pin(COLORS[cliente])});
+      mk.bindPopup(`<b>${nombre}</b><br>${cliente}<br>${dist}<br>${sumin}`);
 
-      PUNTOS.push({mk, nombre, dist, cli, sumin});
+      PUNTOS.push({mk,nombre,dist,cliente,sumin});
       layerPins.addLayer(mk);
     });
 
-    // contador
-    document.getElementById("count").innerText = `${PUNTOS.length} tiendas`;
+    document.getElementById("count").innerText=PUNTOS.length+" tiendas";
 
-    // distritos
     const f=document.getElementById("fDist");
-    const d=[...new Set(PUNTOS.map(p=>p.dist))].filter(Boolean).sort();
+    const d=[...new Set(PUNTOS.map(p=>p.dist))].sort();
     f.innerHTML=`<option value="all">Todos</option>`+d.map(x=>`<option>${x}</option>`).join("");
+    f.onchange=filtrarDistrito;
 
-    // autoajuste
+    // ajustar mapa
     const g=L.featureGroup(PUNTOS.map(p=>p.mk));
     map.fitBounds(g.getBounds().pad(0.15));
-
-    f.onchange=()=>filtrarDistrito();
-    document.getElementById("btnBuscar").onclick=buscar;
-    document.getElementById("btnLimpiar").onclick=()=>{document.getElementById("q").value="";};
   }
 });
 
-// ===================== FILTRO DISTRITO ==========================
+// =================== FILTRAR ===================
 function filtrarDistrito(){
   const dist=document.getElementById("fDist").value;
   layerPins.clearLayers();
-  const visibles = (dist==="all")?PUNTOS:PUNTOS.filter(p=>p.dist===dist);
+  const visibles=(dist==="all")?PUNTOS:PUNTOS.filter(p=>p.dist===dist);
   visibles.forEach(p=>layerPins.addLayer(p.mk));
-  document.getElementById("count").innerText = `${visibles.length} tiendas`;
   if(visibles.length){
     const g=L.featureGroup(visibles.map(p=>p.mk));
     map.fitBounds(g.getBounds().pad(0.15));
   }
 }
 
-// ===================== BUSCAR ==========================
+// =================== BUSCAR ===================
 function buscar(){
-  const q = document.getElementById("q").value.toLowerCase().trim();
-  if(!q) return;
-  const hit = PUNTOS.find(p =>
-     (p.nombre && p.nombre.toLowerCase().includes(q)) ||
-     (p.sumin && p.sumin.includes(q))
-  );
+  const q=document.getElementById("q").value.toLowerCase();
+  const hit=PUNTOS.find(p=>p.nombre.toLowerCase().includes(q)||String(p.sumin).includes(q));
   if(hit){
-    map.setView(hit.mk.getLatLng(), 17);
+    map.setView(hit.mk.getLatLng(),17);
     hit.mk.openPopup();
-  } else alert("No encontrado");
+  }else alert("No encontrado");
 }
+document.getElementById("btnBuscar").onclick=buscar;
+document.getElementById("btnLimpiar").onclick=()=>{document.getElementById("q").value="";};
 
-// ===================== PANEL SLIDE ==========================
+// =================== PANEL SLIDE ===================
 const PF=document.getElementById("panelFilters");
 const PS=document.getElementById("panelSearch");
+
 document.getElementById("openFilters").onclick=()=>{PF.classList.remove("collapsed"); map.invalidateSize();}
 document.getElementById("openSearch").onclick =()=>{PS.classList.remove("collapsed"); map.invalidateSize();}
-document.getElementById("closeFilters").onclick=()=>{PF.classList.add("collapsed"); map.invalidateSize();}
-document.getElementById("closeSearch").onclick =()=>{PS.classList.add("collapsed"); map.invalidateSize();}
+document.getElementById("closeFilters").onclick=()=>PF.classList.add("collapsed");
+document.getElementById("closeSearch").onclick =()=>PS.classList.add("collapsed");
 
-// cierres al hacer click fuera
-document.addEventListener("click",(e)=>{
+document.addEventListener("click",e=>{
   if(!PF.contains(e.target) && !openFilters.contains(e.target)) PF.classList.add("collapsed");
   if(!PS.contains(e.target) && !openSearch.contains(e.target))  PS.classList.add("collapsed");
 });
@@ -237,4 +228,3 @@ document.addEventListener("click",(e)=>{
 
 </body>
 </html>
-``
