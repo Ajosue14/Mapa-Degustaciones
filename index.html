@@ -5,8 +5,9 @@
 <title>Mapa PRO</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-https://unpkg.com/leaflet@1.9.4/dist/leaflet.css
-https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css
+<!-- ✅ CSS reales (NO BORRAR) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
 <style>
   :root{
@@ -90,15 +91,16 @@ https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css
   <p><span class="dot" style="background:#7F8C8D"></span>Otros</p>
 </div>
 
-https://unpkg.com/leaflet@1.9.4/dist/leaflet.js
-https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js
+<!-- ✅ JS reales (NO BORRAR) -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
+  /* MAPA */
   const map = L.map("map").setView([-12.05,-77.05], 11);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
-
   const layerPins = L.layerGroup().addTo(map);
 
   /* COLORES */
@@ -111,7 +113,6 @@ document.addEventListener("DOMContentLoaded", () => {
     "NO ESPECIFICADO":"#7F8C8D"
   };
 
-  /* PIN SVG */
   function pin(color){
     const svg = `
       <svg xmlns='http://www.w3.org/2000/svg' width='26' height='38'>
@@ -120,11 +121,11 @@ document.addEventListener("DOMContentLoaded", () => {
       </svg>`;
     return L.icon({
       iconUrl:"data:image/svg+xml;utf8,"+encodeURIComponent(svg),
-      iconSize:[26,38],iconAnchor:[13,38],popupAnchor:[0,-30]
+      iconSize:[26,38], iconAnchor:[13,38], popupAnchor:[0,-30]
     });
   }
 
-  /* NORMALIZAR FILAS */
+  /* Normalizar */
   function NK(r){
     const out={};
     for(const k in r){
@@ -133,7 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return out;
   }
 
-  /* ✅ DETECTAR CADENA SOLO POR NOMBRE REAL */
+  /* ✅ Detectar cadena por NOMBRE (robusto para tu CSV) */
   function stdClient(nombre){
     const n = String(nombre||"")
       .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
@@ -150,16 +151,15 @@ document.addEventListener("DOMContentLoaded", () => {
     return "NO ESPECIFICADO";
   }
 
-  /* CARGA CSV */
   let PUNTOS=[];
 
   Papa.parse("tiendas.csv?v="+Date.now(),{
     download:true, header:true, dynamicTyping:true,
     complete:(res)=>{
-      res.data.forEach(row=>{
-        const r = NK(row);
+      res.data.forEach(r0=>{
+        const r = NK(r0);
 
-        const nombre = r["NOMBRE"] || r["NOMBRE "] || "";
+        const nombre = r["NOMBRE"] || r["Nombre"] || "";
         const dist   = r["DISTRITO"];
         const lat    = parseFloat(r["LATITUD"]);
         const lng    = parseFloat(r["LONGITUD"]);
@@ -190,17 +190,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  /* FILTRAR */
-  function aplicarDistrito(){
+  /* Filtrar */
+  document.getElementById("fDist").onchange = ()=>{
     const dist=document.getElementById("fDist").value;
     layerPins.clearLayers();
-    const visibles = (dist==="all") ? PUNTOS : PUNTOS.filter(p=>p.dist===dist);
+    const visibles = dist==="all" ? PUNTOS : PUNTOS.filter(p=>p.dist===dist);
     visibles.forEach(p=>layerPins.addLayer(p.mk));
-  }
+  };
 
-  document.getElementById("fDist").onchange=aplicarDistrito;
-
-  /* BUSCAR */
+  /* Buscar */
   document.getElementById("btnBuscar").onclick=()=>{
     const q=document.getElementById("q").value.toLowerCase();
     const hit=PUNTOS.find(p=>p.nombre.toLowerCase().includes(q)||p.sumin.includes(q));
@@ -209,9 +207,10 @@ document.addEventListener("DOMContentLoaded", () => {
       hit.mk.openPopup();
     } else alert("No encontrado");
   };
+
   document.getElementById("btnLimpiar").onclick=()=>{ document.getElementById("q").value=""; };
 
-  /* PANEL SLIDE */
+  /* Panel slide */
   const PF=document.getElementById("panelFilters");
   const PS=document.getElementById("panelSearch");
 
