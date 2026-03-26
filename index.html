@@ -7,22 +7,19 @@
 
   <!-- CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
   <link rel="stylesheet" href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
   <style>
     :root{
       --panel-bg:#fff; --panel-br:rgba(0,0,0,.06);
-      --shadow:0 10px 30px rgba(0,0,0,.15);
-      --text:#102a43;
+      --shadow:0 10px 30px rgba(0,0,0,.15); --text:#102a43;
     }
-    html, body { margin:0; height:100%; }
-    #map { width:100%; height:100%; }
+    html, body{ margin:0; height:100%; }
+    #map{ width:100%; height:100%; }
     .panel{
       position:absolute; z-index:999; background:var(--panel-bg); color:var(--text);
       border:1px solid var(--panel-br); padding:14px; border-radius:14px;
-      font-family:"Segoe UI",system-ui,-apple-system,Arial; box-shadow:var(--shadow);
+      font-family:"Segoe UI", system-ui, -apple-system, Arial; box-shadow:var(--shadow);
     }
     .search{ top:12px; right:12px; width:300px; }
     .filters{ top:12px; left:12px; width:260px; }
@@ -34,8 +31,6 @@
       background:linear-gradient(135deg,#0078D7,#2196F3); color:#fff; font-weight:700;
     }
     .dot{ width:12px; height:12px; border-radius:50%; display:inline-block; margin-right:6px; }
-    /* Icono de cluster personalizado */
-    .mycluster { background: transparent; border: none; }
   </style>
 </head>
 
@@ -57,14 +52,14 @@
     <label>Distrito</label>
     <select id="fDist"><option value="all">Todos</option></select>
 
-    <!-- Checkboxes solo informativos (deshabilitados) -->
-    <div style="margin-top:10px; opacity:.7; font-size:14px;">
-      <label><input type="checkbox" checked disabled> <span class="dot" style="background:#E74C3C"></span>Supermercados Peruanos</label><br>
-      <label><input type="checkbox" checked disabled> <span class="dot" style="background:#3498DB"></span>Cencosud</label><br>
-      <label><input type="checkbox" checked disabled> <span class="dot" style="background:#27AE60"></span>Tottus</label><br>
-      <label><input type="checkbox" checked disabled> <span class="dot" style="background:#F1C40F"></span>Metro</label><br>
-      <label><input type="checkbox" checked disabled> <span class="dot" style="background:#E67E22"></span>Vivanda</label><br>
-      <label><input type="checkbox" checked disabled> <span class="dot" style="background:#7F8C8D"></span>Otros</label>
+    <!-- Solo informativo (no ocultan) -->
+    <div style="margin-top:10px; opacity:.85; font-size:14px;">
+      <label><span class="dot" style="background:#E74C3C"></span>Supermercados Peruanos</label><br>
+      <label><span class="dot" style="background:#3498DB"></span>Cencosud</label><br>
+      <label><span class="dot" style="background:#27AE60"></span>Tottus</label><br>
+      <label><span class="dot" style="background:#F1C40F"></span>Metro</label><br>
+      <label><span class="dot" style="background:#E67E22"></span>Vivanda</label><br>
+      <label><span class="dot" style="background:#7F8C8D"></span>Otros</label>
     </div>
 
     <p id="count" style="margin-top:10px;"></p>
@@ -83,7 +78,6 @@
 
   <!-- JS al final -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
   <script>
@@ -92,6 +86,9 @@
   L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
     attribution:"© OpenStreetMap • © CARTO"
   }).addTo(map);
+
+  // ====== Grupo de pines (sin clúster, todos visibles siempre)
+  const layerPins = L.layerGroup().addTo(map);
 
   // ====== Colores por cadena
   const COLORS = {
@@ -140,31 +137,6 @@
   }
   function pad4(v){ if(v==null) return ""; const s=String(v).trim(); return /^\d+$/.test(s)? s.padStart(4,"0"): s; }
 
-  // ====== Cluster coloreado por color dominante
-  const cluster = L.markerClusterGroup({
-    iconCreateFunction: function (cl) {
-      const children = cl.getAllChildMarkers();
-      const tally = {};
-      children.forEach(m => {
-        const chain = m.options.chain || "NO ESPECIFICADO";
-        tally[chain] = (tally[chain] || 0) + 1;
-      });
-      // color del grupo = cadena más frecuente
-      let top = "NO ESPECIFICADO", max = 0;
-      Object.keys(tally).forEach(k => { if(tally[k] > max){ max = tally[k]; top = k; }});
-      const color = COLORS[top] || "#7F8C8D";
-      const html = `<div style="
-          background:${color};
-          color:#fff; font-weight:700;
-          border-radius:50%; width:38px; height:38px;
-          display:flex; align-items:center; justify-content:center;
-          border:2px solid #fff; box-shadow:0 0 0 2px rgba(0,0,0,.15);
-        ">${cl.getChildCount()}</div>`;
-      return L.divIcon({ html, className:"mycluster", iconSize:[38,38] });
-    }
-  });
-  map.addLayer(cluster);
-
   // ====== Datos en memoria
   let PUNTOS = [];   // { mk, cli, dist, nombre, sumin }
 
@@ -174,7 +146,7 @@
     complete: function(res){
       const raw = res.data || [];
 
-      // Normalizar + crear marcadores
+      // Crear pines y añadir TODOS desde el inicio
       raw.forEach(r0 => {
         const r = normKeys(r0);
         const nombre = (r["NOMBRE"]||"").toString().trim();
@@ -183,23 +155,21 @@
         const lat    = parseFloat(r["LATITUD"]);
         const lng    = parseFloat(r["LONGITUD"]);
         const sumin  = pad4(r["C.SUMIN"] || r["SUMIN"] || r["SUM"]);
-
         if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
 
-        const mk = L.marker([lat,lng], { icon: pinIcon(COLORS[cli]||COLORS["NO ESPECIFICADO"]), chain: cli });
+        const mk = L.marker([lat,lng], { icon: pinIcon(COLORS[cli]||COLORS["NO ESPECIFICADO"]) });
         mk.bindPopup(
           `<b>${nombre}</b><br>
            <b>Cliente:</b> ${cli}<br>
            <b>Distrito:</b> ${dist}<br>
            <b>Suministro:</b> ${sumin || "-"}`);
+
         PUNTOS.push({ mk, cli, dist, nombre, sumin });
+        layerPins.addLayer(mk);    // ← todos visibles desde el inicio
       });
 
-      // Poner todos los pines SIEMPRE
-      PUNTOS.forEach(p => cluster.addLayer(p.mk));
+      // Contador y distritos
       document.getElementById("count").innerText = `${PUNTOS.length} tiendas`;
-
-      // Llenar distritos
       const sel = document.getElementById("fDist");
       const dists = [...new Set(PUNTOS.map(p=>p.dist))].filter(Boolean).sort();
       sel.innerHTML = `<option value="all">Todos</option>` + dists.map(d=>`<option>${d}</option>`).join("");
@@ -210,7 +180,7 @@
       document.getElementById("btnLimpiar").addEventListener("click", ()=>{ document.getElementById("q").value=""; });
       document.getElementById("q").addEventListener("keydown", e=>{ if(e.key==="Enter") buscar(); });
 
-      // Ajuste inicial
+      // Ajuste inicial para ver TODO
       if(PUNTOS.length){
         const g = L.featureGroup(PUNTOS.map(p=>p.mk));
         map.fitBounds(g.getBounds().pad(0.2));
@@ -218,21 +188,21 @@
     }
   });
 
-  // ====== Mostrar SIEMPRE todos; solo filtra por distrito si se elige
+  // ====== Filtrar solo por distrito (sin ocultar permanentemente)
   function aplicarDistrito(){
     const dist = document.getElementById("fDist").value;
-    cluster.clearLayers();
+    layerPins.clearLayers();
 
     const visibles = (dist==="all")
-      ? PUNTOS.map(p=>p.mk)
-      : PUNTOS.filter(p=>p.dist===dist).map(p=>p.mk);
+      ? PUNTOS
+      : PUNTOS.filter(p=>p.dist===dist);
 
-    visibles.forEach(m => cluster.addLayer(m));
+    visibles.forEach(p=> layerPins.addLayer(p.mk));
     document.getElementById("count").innerText =
       `${visibles.length} tienda${visibles.length===1?"":"s"} visible${visibles.length===1?"":"s"}`;
 
     if(visibles.length){
-      const g = L.featureGroup(visibles);
+      const g = L.featureGroup(visibles.map(p=>p.mk));
       map.fitBounds(g.getBounds().pad(0.2));
     }
   }
@@ -255,4 +225,3 @@
   </script>
 </body>
 </html>
-``
