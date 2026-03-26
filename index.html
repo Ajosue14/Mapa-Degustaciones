@@ -2,44 +2,50 @@
 <html lang="es">
 <head>
 <meta charset="utf-8" />
-<title>Mapa PRO – Desde Cero 100% Funcional</title>
+<title>Mapa PRO – Con Filtros</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<!-- ✅ CSS reales -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
 
 <style>
   html,body{margin:0;height:100%;}
   #map{width:100%;height:100%;}
-
-  .legend{
-    position:absolute;
-    bottom:12px;
-    left:12px;
-    z-index:999;
-    background:white;
-    padding:14px;
-    border-radius:12px;
-    border:1px solid #ddd;
-    font-family:"Segoe UI";
+  .panel{
+    position:absolute;z-index:999;background:white;padding:14px;
+    border-radius:12px;border:1px solid #ddd;font-family:"Segoe UI";
     box-shadow:0 4px 16px rgba(0,0,0,.12);
   }
-
-  .dot{
-    width:14px;height:14px;
-    border-radius:50%;
-    display:inline-block;
-    margin-right:8px;
-  }
+  .filters{top:12px;left:12px;width:260px;}
+  .legend{bottom:12px;left:12px;width:220px;}
+  .dot{width:14px;height:14px;border-radius:50%;display:inline-block;margin-right:6px;}
 </style>
 </head>
-
 <body>
 
 <div id="map"></div>
 
-<div class="legend">
+<!-- ✅ PANEL FILTROS -->
+<div class="panel filters">
+  <h3 style="margin-top:0">Filtros</h3>
+
+  <label><b>Distrito:</b></label>
+  <select id="fDist" style="width:100%;padding:8px;margin-bottom:10px;"></select>
+
+  <label><b>Cadena:</b></label>
+  <select id="fCadena" style="width:100%;padding:8px;">
+    <option value="all">Todas</option>
+    <option value="SUPERMERCADOS PERUANOS">Supermercados Peruanos</option>
+    <option value="CENCOSUD">Cencosud</option>
+    <option value="TOTTUS">Tottus</option>
+    <option value="METRO">Metro</option>
+    <option value="VIVANDA">Vivanda</option>
+    <option value="NO ESPECIFICADO">Otros</option>
+  </select>
+</div>
+
+<!-- ✅ LEYENDA -->
+<div class="panel legend">
   <h3 style="margin:0 0 8px 0">Leyenda</h3>
   <p><span class="dot" style="background:#E74C3C"></span>Supermercados Peruanos</p>
   <p><span class="dot" style="background:#3498DB"></span>Cencosud</p>
@@ -49,102 +55,127 @@
   <p><span class="dot" style="background:#7F8C8D"></span>Otros</p>
 </div>
 
-<!-- ✅ JS reales -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+https://unpkg.com/leaflet@1.9.4/dist/leaflet.js
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
 <script>
-// ====================== MAPA ==========================
+// ======================= MAPA =======================
 const map = L.map("map").setView([-12.05, -77.05], 11);
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  attribution: "© OpenStreetMap"
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+  attribution:"© OpenStreetMap"
 }).addTo(map);
 
-const capa = L.layerGroup().addTo(map);
+const layerPins = L.layerGroup().addTo(map);
+let ALL_POINTS = [];
 
-// ====================== COLORES ==========================
+// ======================= COLORES =======================
 const COLORS = {
-  "SUPERMERCADOS PERUANOS": "#E74C3C",
-  "CENCOSUD": "#3498DB",
-  "TOTTUS": "#27AE60",
-  "METRO": "#F1C40F",
-  "VIVANDA": "#E67E22",
-  "NO ESPECIFICADO": "#7F8C8D"
+  "SUPERMERCADOS PERUANOS":"#E74C3C",
+  "CENCOSUD":"#3498DB",
+  "TOTTUS":"#27AE60",
+  "METRO":"#F1C40F",
+  "VIVANDA":"#E67E22",
+  "NO ESPECIFICADO":"#7F8C8D"
 };
 
-function crearIcono(color){
+function pin(color){
   const svg = `
-    <svg xmlns='http://www.w3.org/2000/svg' width='26' height='38'>
-      <path d='M13 0C5.8 0 0 5.8 0 13c0 10 13 25 13 25s13-15 13-25C26 5.8 20.2 0 13 0z' fill='${color}'/>
-      <circle cx='13' cy='13' r='6' fill='white'/>
-    </svg>`;
-  return L.icon({
-    iconUrl: "data:image/svg+xml;utf8," + encodeURIComponent(svg),
-    iconSize: [26,38], iconAnchor: [13,38], popupAnchor: [0,-30]
-  });
+  <svg xmlns='http://www.w3.org/2000/svg' width='26' height='38'>
+    <path d='M13 0C5.8 0 0 5.8 0 13c0 10 13 25 13 25s13-15 13-25C26 5.8 20.2 0 13 0z' fill='${color}'/>
+    <circle cx='13' cy='13' r='6' fill='white'/>
+  </svg>`;
+
+  return L.icon({iconUrl:"data:image/svg+xml;utf8,"+encodeURIComponent(svg),iconSize:[26,38],iconAnchor:[13,38],popupAnchor:[0,-30]});
 }
 
-// ====================== DETECTAR CADENA ==========================
 function detectarCadena(nombre){
   const n = String(nombre||"")
-    .normalize("NFD").replace(/[\\u0300-\\u036f]/g,"")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
     .toUpperCase();
 
   if(n.includes("TOTTUS")) return "TOTTUS";
   if(n.includes("METRO")) return "METRO";
   if(n.includes("VIVANDA")) return "VIVANDA";
   if(n.includes("WONG")) return "CENCOSUD";
-  if(n.includes("PLAZA VEA") || n.includes("SUPER VEA") || n.includes("HIPER PLAZA VEA"))
-    return "SUPERMERCADOS PERUANOS";
+  if(n.includes("PLAZA VEA")||n.includes("SUPER VEA")||n.includes("HIPER PLAZA VEA")) return "SUPERMERCADOS PERUANOS";
 
   return "NO ESPECIFICADO";
 }
 
-// ====================== NORMALIZAR FILA ==========================
 function NK(row){
-  const out = {};
-  for(const k in row){
-    out[k.trim().toUpperCase()] = row[k];
-  }
+  const out={};
+  for(const k in row){ out[k.trim().toUpperCase()] = row[k]; }
   return out;
 }
 
-// ====================== LEER CSV ==========================
+// ======================= CARGAR CSV =======================
 Papa.parse("tiendas.csv?v="+Date.now(),{
   download:true,
   header:true,
   dynamicTyping:true,
-  complete: function(res){
+  complete:(res)=>{
 
-    const puntos = [];
+    const distritosSet = new Set();
 
-    res.data.forEach(raw=>{
-      const r = NK(raw);
+    res.data.forEach(r0=>{
+      const r = NK(r0);
 
-      const nombre = r["NOMBRE"] || r["NOMBRE "] || r["Nombre"] || "";
-      const dist   = r["DISTRITO"];
-      const lat    = parseFloat(r["LATITUD"]);
-      const lng    = parseFloat(r["LONGITUD"]);
-      const sumin  = String(r["C.SUMIN"] || "").padStart(4,"0");
+      const nombre = r["NOMBRE"] || r["Nombre"] || "";
+      const lat    = parseFloat(r["LATITUD"] || r["Latitud"]);
+      const lng    = parseFloat(r["LONGITUD"] || r["Longitud"]);
+      const dist   = r["DISTRITO"] || "";
+      const sumin  = String(r["C.SUMIN"] || r["C.Sumin"] || "").padStart(4,"0");
 
       if(!lat || !lng) return;
 
-      const cadena = detectarCadena(nombre);
-      const color  = COLORS[cadena];
+      const cli = detectarCadena(nombre);
+      const color = COLORS[cli];
 
-      const mk = L.marker([lat,lng], {icon: crearIcono(color)});
-      mk.bindPopup(`<b>${nombre}</b><br>${cadena}<br>${dist}<br>${sumin}`);
+      const mk = L.marker([lat,lng],{icon:pin(color)});
+      mk.bindPopup(`<b>${nombre}</b><br>${cli}<br>${dist}<br>${sumin}`);
 
-      puntos.push(mk);
-      capa.addLayer(mk);
+      ALL_POINTS.push({mk, nombre, dist, cli});
+      layerPins.addLayer(mk);
+      distritosSet.add(dist);
     });
 
-    if(puntos.length > 0){
-      const g = L.featureGroup(puntos);
+    // Llenar distritos
+    const sel = document.getElementById("fDist");
+    sel.innerHTML = `<option value="all">Todos</option>` +
+      [...distritosSet].sort().map(d=>`<option>${d}</option>`).join("");
+
+    // Autozoom
+    if(ALL_POINTS.length){
+      const g = L.featureGroup(ALL_POINTS.map(p=>p.mk));
       map.fitBounds(g.getBounds().pad(0.2));
     }
   }
 });
+
+// ======================= APLICAR FILTROS =======================
+function aplicarFiltros(){
+  const d = document.getElementById("fDist").value;
+  const c = document.getElementById("fCadena").value;
+
+  layerPins.clearLayers();
+
+  const visibles = ALL_POINTS.filter(p=>{
+    const okDist = (d==="all") || (p.dist===d);
+    const okCad  = (c==="all") || (p.cli===c);
+    return okDist && okCad;
+  });
+
+  visibles.forEach(p=>layerPins.addLayer(p.mk));
+
+  if(visibles.length){
+    const g = L.featureGroup(visibles.map(p=>p.mk));
+    map.fitBounds(g.getBounds().pad(0.2));
+  }
+}
+
+document.getElementById("fDist").onchange = aplicarFiltros;
+document.getElementById("fCadena").onchange = aplicarFiltros;
+
 </script>
 
 </body>
