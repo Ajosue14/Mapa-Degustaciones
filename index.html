@@ -3,194 +3,121 @@
 <head>
   <meta charset="utf-8" />
   <title>Mapa PRO</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- ✅ ESTILOS REALES -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
-  <link rel="stylesheet" href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  https://unpkg.com/leaflet@1.9.4/dist/leaflet.css
+  https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css
+  https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css
+  https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css
 
-  <!-- ✅ SCRIPTS REALES -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  https://unpkg.com/leaflet@1.9.4/dist/leaflet.js
+  https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js</script>
+  https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js</script>
 
   <style>
-    :root{ --brand:#0078D7; --brand-2:#2196F3; --text:#102a43;
-           --panel-bg:rgba(255,255,255,.78); --panel-border:rgba(0,0,0,.06);
-           --shadow:0 10px 30px rgba(0,0,0,.18); }
-    html, body{ margin:0; height:100%; }
-    #map{ width:100%; height:100%; }
-
-    .panel{
-      position:absolute; z-index:999; background:var(--panel-bg);
-      border:1px solid var(--panel-border); backdrop-filter:blur(12px);
-      padding:16px; border-radius:18px; font-family:"Segoe UI",sans-serif;
-      color:var(--text); box-shadow:var(--shadow);
-    }
-    .search{ top:16px; right:16px; width:300px; }
-    .filters{ top:16px; left:16px; width:260px; }
-    .legend{ bottom:16px; left:16px; width:260px; }
-
-    input,select{ width:100%; padding:10px; border-radius:10px; border:1px solid #ccc; margin-top:8px; }
-    button{
-      width:100%; padding:12px; margin-top:8px;
-      background:linear-gradient(135deg,var(--brand),var(--brand-2)); color:#fff; border:none;
-      border-radius:10px; cursor:pointer; font-weight:bold;
-    }
-    .dot{ width:14px; height:14px; border-radius:50%; display:inline-block; margin-right:6px; }
+    html, body { margin: 0; height: 100%; }
+    #map { width: 100%; height: 100%; }
+    .panel { position: absolute; z-index: 999; background: white; padding: 14px; border-radius: 14px; }
+    .search { top: 10px; right: 10px; width: 280px; }
+    .filters { top: 10px; left: 10px; width: 250px; }
+    .legend { bottom: 10px; left: 10px; width: 250px; }
   </style>
 </head>
 
 <body>
-  <div id="map"></div>
 
-  <!-- PANEL BUSCAR -->
-  <div class="panel search">
-    <h3><span><i class="bi bi-search"></i> Buscar</span></h3>
-    <input id="q" placeholder="Nombre o suministro" />
-    <button id="btnBuscar">Buscar</button>
-    <button id="btnLimpiar" style="background:#eee;color:#333;">Limpiar</button>
-  </div>
+<div id="map"></div>
 
-  <!-- PANEL FILTROS -->
-  <div class="panel filters">
-    <h3><i class="bi bi-sliders"></i> Filtros</h3>
+<div class="panel search">
+  <h3>Buscar</h3>
+  <input id="q" placeholder="Nombre o suministro">
+  <button id="btnBuscar">Buscar</button>
+  <button id="btnLimpiar">Limpiar</button>
+</div>
 
-    <label>Distrito</label>
-    <select id="fDist"><option value="all">Todos</option></select>
+<div class="panel filters">
+  <h3>Filtros</h3>
+  <label>Distrito</label>
+  <select id="fDist"><option value="all">Todos</option></select><br><br>
 
-    <label><input type="checkbox" id="sp" checked> <span class="dot" style="background:#E74C3C"></span>Supermercados Peruanos</label><br>
-    <label><input type="checkbox" id="cen" checked> <span class="dot" style="background:#3498DB"></span>Cencosud</label><br>
-    <label><input type="checkbox" id="tot" checked> <span class="dot" style="background:#27AE60"></span>Tottus</label><br>
-    <label><input type="checkbox" id="unk" checked> <span class="dot" style="background:#7F8C8D"></span>Otros</label><br>
+  <input type="checkbox" id="sp" checked> Supermercados Peruanos<br>
+  <input type="checkbox" id="cen" checked> Cencosud<br>
+  <input type="checkbox" id="tot" checked> Tottus<br>
+  <input type="checkbox" id="unk" checked> Otros<br>
 
-    <p id="count"></p>
-  </div>
+  <p id="count"></p>
+</div>
 
-  <!-- PANEL LEYENDA -->
-  <div class="panel legend">
-    <h3><i class="bi bi-info-circle"></i> Leyenda</h3>
-    <p><span class="dot" style="background:#E74C3C"></span>Supermercados Peruanos</p>
-    <p><span class="dot" style="background:#3498DB"></span>Cencosud</p>
-    <p><span class="dot" style="background:#27AE60"></span>Tottus</p>
-    <p><span class="dot" style="background:#F1C40F"></span>Metro</p>
-    <p><span class="dot" style="background:#E67E22"></span>Vivanda</p>
-    <p><span class="dot" style="background:#7F8C8D"></span>Otros</p>
-  </div>
+<div class="panel legend">
+  <h3>Leyenda</h3>
+  <p>Supermercados Peruanos</p>
+  <p>Cencosud</p>
+  <p>Tottus</p>
+  <p>Metro</p>
+  <p>Vivanda</p>
+  <p>Otros</p>
+</div>
 
-  <!-- JS (al final SIEMPRE) -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script>
+// ========== MAPA ==========
+const map = L.map("map").setView([-12.05, -77.05], 11);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+const cluster = L.markerClusterGroup();
+map.addLayer(cluster);
 
-  <script>
-  // ===== Mapa base =====
-  const map = L.map("map").setView([-12.05,-77.05], 11);
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-    attribution: "© OpenStreetMap • © CARTO"
-  }).addTo(map);
-  const cluster = L.markerClusterGroup();
-  map.addLayer(cluster);
+// ========== COLORES ==========
+const COLORS = {
+  "SUPERMERCADOS PERUANOS": "#E74C3C",
+  "CENCOSUD": "#3498DB",
+  "TOTTUS": "#27AE60",
+  "METRO": "#F1C40F",
+  "VIVANDA": "#E67E22",
+  "NO ESPECIFICADO": "#7F8C8D"
+};
 
-  // ===== Colores por cadena =====
-  const COLORS = {
-    "SUPERMERCADOS PERUANOS":"#E74C3C",
-    "CENCOSUD":"#3498DB",
-    "TOTTUS":"#27AE60",
-    "METRO":"#F1C40F",
-    "VIVANDA":"#E67E22",
-    "NO ESPECIFICADO":"#7F8C8D"
-  };
+// ========== ICONO ==========
+function icon(color){
+  return L.icon({
+    iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+    iconSize: [25, 41],
+    iconAnchor: [12, 41]
+  });
+}
 
-  // ===== Icono pin =====
-  function icon(color){
-    const svg = `
-      <svg xmlns='http://www.w3.org/2000/svg' width='26' height='38'>
-        <path d='M13 0C5.8 0 0 5.8 0 13c0 10 13 25 13 25s13-15 13-25C26 5.8 20.2 0 13 0z' fill='${color}'/>
-        <circle cx='13' cy='13' r='6' fill='white'/>
-      </svg>`;
-    return L.icon({
-      iconUrl: "data:image/svg+xml;utf8," + encodeURIComponent(svg),
-      iconSize:[26,38], iconAnchor:[13,38], popupAnchor:[0,-30]
+// ========== DETECTAR CLIENTE ==========
+function detectarCliente(nombre){
+  const n = (nombre || "").toUpperCase();
+  if(n.includes("TOTTUS")) return "TOTTUS";
+  if(n.includes("METRO")) return "METRO";
+  if(n.includes("VIVANDA")) return "VIVANDA";
+  if(n.includes("WONG")) return "CENCOSUD";
+  if(n.includes("PLAZA") || n.includes("VEA")) return "SUPERMERCADOS PERUANOS";
+  return "NO ESPECIFICADO";
+}
+
+// ========== LEER CSV ==========
+let PUNTOS = [];
+Papa.parse("tiendas.csv", {
+  download: true,
+  header: true,
+  dynamicTyping: true,
+  complete: function(res){
+    console.log(res.data);
+    res.data.forEach(s=>{
+      if(!s.Latitud || !s.Longitud) return;
+
+      const cli = detectarCliente(s.Nombre);
+      const mk = L.marker([s.Latitud, s.Longitud], {icon: icon(COLORS[cli])});
+      mk.bindPopup(s.Nombre);
+
+      PUNTOS.push({mk, cli});
     });
+
+    PUNTOS.forEach(p => cluster.addLayer(p.mk));
+    document.getElementById("count").innerText = PUNTOS.length + " tiendas";
   }
+});
+</script>
 
-  // ===== Helpers: normalizar CSV =====
-  function normKeys(row){
-    const out = {};
-    for(const k in row){
-      if(!Object.prototype.hasOwnProperty.call(row,k)) continue;
-      const nk = String(k||"")
-        .replace(/\uFEFF/g,"")  // BOM
-        .replace(/\u00A0/g," ") // NBSP
-        .trim()
-        .toUpperCase();
-      out[nk] = row[k];
-    }
-    return out;
-  }
-  function pad4(v){
-    if(v===null || v===undefined) return "";
-    const s = String(v).trim();
-    return /^\d+$/.test(s) ? s.padStart(4,"0") : s;
-  }
-  function detectarCliente(nombre){
-    const n = (nombre||"").toUpperCase();
-    if(n.includes("TOTTUS")) return "TOTTUS";
-    if(n.includes("METRO")) return "METRO";
-    if(n.includes("VIVANDA")) return "VIVANDA";
-    if(n.includes("WONG")) return "CENCOSUD";
-    if(n.includes("PLAZA VEA") || n.includes("SUPER VEA") || n.includes("SUPERMERCADOS PERUANOS")) return "SUPERMERCADOS PERUANOS";
-    return "NO ESPECIFICADO";
-  }
-
-  // ===== Leer CSV y poblar mapa =====
-  let PUNTOS = [];
-  let STORES = [];
-
-  Papa.parse("tiendas.csv?v=" + Date.now(), {
-    download: true,
-    header: true,
-    dynamicTyping: true,
-    skipEmptyLines: "greedy",
-    complete: function(res){
-      const raw = res.data || [];
-      STORES = raw.map(r0 => {
-        const r = normKeys(r0);
-        const code   = (r["CLIENTE"] || r["CODIGO"] || "").toString().trim();
-        const nombre = (r["NOMBRE"]  || "").toString().trim();
-        const dist   = (r["DISTRITO"]|| "").toString().trim();
-        const lat    = parseFloat(r["LATITUD"]);
-        const lng    = parseFloat(r["LONGITUD"]);
-        const sumin  = pad4(r["C.SUMIN"] || r["SUMIN"] || r["SUM"]);
-
-        return {
-          name: code ? `${nombre} (${code})` : nombre,
-          client: detectarCliente(nombre),
-          district: dist,
-          lat, lng, sumin
-        };
-      }).filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lng));
-
-      console.log("CSV filas:", raw.length, " / válidas:", STORES.length);
-
-      // Llenar distritos
-      const sel = document.getElementById("fDist");
-      const dists = [...new Set(STORES.map(s=>s.district))].filter(Boolean).sort();
-      sel.innerHTML = `<option value="all">Todos</option>` + dists.map(d=>`<option>${d}</option>`).join("");
-
-      // Crear marcadores
-      PUNTOS = [];
-      STORES.forEach(s=>{
-        const col = COLORS[s.client] || COLORS["NO ESPECIFICADO"];
-        const mk = L.marker([s.lat,s.lng], { icon: icon(col) });
-        mk.bindPopup(
-          `<b>${s.name}</b><br>
-           <b>Cliente:</b> ${s.client}<br>
-           <b>Distrito:</b> ${s.district}<br>
-           <b>Suministro:</b> ${s.sumin}`
-        );
-        // Agrupación panel: METRO -> CENCOSUD, VIVANDA -> SP
-        let group =
+</body>
+</html>
