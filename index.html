@@ -18,8 +18,10 @@
   html,body{margin:0;height:100%;}
   #map{width:100%;height:100%;}
 
-  .leaflet-top.leaflet-left{ top:80px; } /* baja el zoom */
+  /* mueve el zoom hacia abajo */
+  .leaflet-top.leaflet-left{ top:80px; }
 
+  /* Paneles */
   .panel{
     position:absolute; z-index:999; background:var(--panel-bg); color:var(--text);
     border:1px solid var(--panel-br); border-radius:14px; padding:14px;
@@ -28,7 +30,7 @@
   }
   .collapsed{opacity:0;visibility:hidden;transform:translateY(-10px);}
   .filters{top:80px;left:12px;width:260px;}
-  .search{top:80px;right:12px;width:260px;}
+  .search{ top:80px;right:12px;width:260px;}
   .legend{bottom:12px;left:12px;width:240px;}
 
   input,select{width:100%;padding:10px;margin-top:8px;border-radius:10px;border:1px solid #ccc;}
@@ -77,7 +79,7 @@
 <div id="panelSearch" class="panel search collapsed">
   <button class="btn-close" id="closeSearch"><i class="bi bi-x"></i></button>
   <h3>Buscar</h3>
-  <input id="q" placeholder="Nombre o suministro">
+  <input id="q" placeholder="Nombre o suministro"/>
   <button id="btnBuscar">Buscar</button>
   <button id="btnLimpiar" class="btn-plain">Limpiar</button>
 </div>
@@ -100,12 +102,12 @@
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
+  /* MAPA */
   const map = L.map("map").setView([-12.05,-77.05], 11);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
-
   const layerPins = L.layerGroup().addTo(map);
 
-  /* Colores */
+  /* COLORES */
   const COLORS = {
     "SUPERMERCADOS PERUANOS":"#E74C3C",
     "CENCOSUD":"#3498DB",
@@ -117,16 +119,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function pin(color){
     const svg = `
-    <svg xmlns='http://www.w3.org/2000/svg' width='26' height='38'>
-      <path d='M13 0C5.8 0 0 5.8 0 13c0 10 13 25 13 25s13-15 13-25C26 5.8 20.2 0 13 0z' fill='${color}'/>
-      <circle cx='13' cy='13' r='6' fill='white'/>
-    </svg>`;
+      <svg xmlns='http://www.w3.org/2000/svg' width='26' height='38'>
+        <path d='M13 0C5.8 0 0 5.8 0 13c0 10 13 25 13 25s13-15 13-25C26 5.8 20.2 0 13 0z' fill='${color}'/>
+        <circle cx='13' cy='13' r='6' fill='white'/>
+      </svg>`;
     return L.icon({
       iconUrl:"data:image/svg+xml;utf8,"+encodeURIComponent(svg),
       iconSize:[26,38],iconAnchor:[13,38],popupAnchor:[0,-30]
     });
   }
 
+  /* NORMALIZAR FILAS */
   function NK(r){
     const out={};
     for(const k in r){
@@ -135,45 +138,53 @@ document.addEventListener("DOMContentLoaded", () => {
     return out;
   }
 
+  /* ✅ CORRECCIÓN TOTAL DE COLORES */
   function stdClient(nombre, clienteRaw){
-  const c = String(clienteRaw || "").toUpperCase();
-  const n = String(nombre || "").toUpperCase();
+    const c = String(clienteRaw || "").toUpperCase();
+    const n = String(nombre     || "").toUpperCase();
 
-  if(c.includes("SUPERMERCADOS")) return "SUPERMERCADOS PERUANOS";
-  if(c.includes("CENCOSUD"))      return "CENCOSUD";
-  if(c.includes("TOTTUS"))        return "TOTTUS";
+    if(c.includes("SUPERMERCADOS")) return "SUPERMERCADOS PERUANOS";
+    if(c.includes("CENCOSUD"))      return "CENCOSUD";
+    if(c.includes("TOTTUS"))        return "TOTTUS";
 
-  if(n.includes("METRO"))         return "METRO";
-  if(n.includes("VIVANDA"))       return "VIVANDA";
-  if(n.includes("WONG"))          return "CENCOSUD";
+    if(n.includes("METRO"))         return "METRO";
+    if(n.includes("VIVANDA"))       return "VIVANDA";
+    if(n.includes("WONG"))          return "CENCOSUD";
 
-  if(n.includes("PLAZA VEA") || n.includes("SUPER VEA"))
-      return "SUPERMERCADOS PERUANOS";
+    if(n.includes("PLAZA VEA") || n.includes("SUPER VEA"))
+        return "SUPERMERCADOS PERUANOS";
 
-  return "NO ESPECIFICADO";
-}
+    return "NO ESPECIFICADO";
+  }
 
-
-  let PUNTOS=[];
+  /* CARGAR CSV */
+  let PUNTOS = [];
 
   Papa.parse("tiendas.csv?v="+Date.now(),{
     download:true, header:true, dynamicTyping:true,
     complete:(res)=>{
       res.data.forEach(r0=>{
         const r = NK(r0);
+
         const nombre = r["NOMBRE"];
-        const lat = parseFloat(r["LATITUD"]);
-        const lng = parseFloat(r["LONGITUD"]);
+        const lat    = parseFloat(r["LATITUD"]);
+        const lng    = parseFloat(r["LONGITUD"]);
         if(!lat || !lng) return;
 
         const cliStd = stdClient(nombre, r["CLIENTE"]);
         const color  = COLORS[cliStd];
-        const dist   = r["DISTRITO"];
+
+        const dist = r["DISTRITO"];
         const sumin = String(r["C.SUMIN"] || r["SUMIN"] || "").padStart(4,"0");
-``
 
         const mk = L.marker([lat,lng], {icon:pin(color)});
-        mk.bindPopup(`<b>${nombre}</b><br>${cliStd}<br>${dist}<br>${sumin}`);
+
+        mk.bindPopup(`
+          <b>${nombre}</b><br>
+          <b>Cadena:</b> ${cliStd}<br>
+          <b>Distrito:</b> ${dist}<br>
+          <b>Suministro:</b> ${sumin}
+        `);
 
         PUNTOS.push({mk,nombre,dist,cliStd,sumin});
         layerPins.addLayer(mk);
@@ -192,6 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  /* FILTRAR DISTRITO */
   function aplicarDistrito(){
     const dist=document.getElementById("fDist").value;
     layerPins.clearLayers();
@@ -200,23 +212,32 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   document.getElementById("fDist").onchange=aplicarDistrito;
 
+  /* BUSCAR */
   document.getElementById("btnBuscar").onclick=()=>{
     const q=document.getElementById("q").value.toLowerCase();
-    const hit=PUNTOS.find(p=>p.nombre.toLowerCase().includes(q)||p.sumin.includes(q));
+    const hit=PUNTOS.find(p=>
+      p.nombre.toLowerCase().includes(q) ||
+      p.sumin.includes(q)
+    );
     if(hit){
       map.setView(hit.mk.getLatLng(),16);
       hit.mk.openPopup();
-    }else alert("No encontrado");
+    } else {
+      alert("No encontrado");
+    }
   };
   document.getElementById("btnLimpiar").onclick=()=>{document.getElementById("q").value="";};
 
-  /* Panel slide */
+  /* PANEL SLIDE */
   const PF=document.getElementById("panelFilters");
   const PS=document.getElementById("panelSearch");
+
   openFilters.onclick=()=>PF.classList.remove("collapsed");
   openSearch.onclick =()=>PS.classList.remove("collapsed");
+
   closeFilters.onclick=()=>PF.classList.add("collapsed");
   closeSearch.onclick =()=>PS.classList.add("collapsed");
+
   document.addEventListener("click",(e)=>{
     if(!PF.contains(e.target)&&!openFilters.contains(e.target)) PF.classList.add("collapsed");
     if(!PS.contains(e.target)&&!openSearch.contains(e.target))  PS.classList.add("collapsed");
@@ -227,4 +248,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
-``
