@@ -5,54 +5,86 @@
   <title>Mapa PRO</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <!-- CSS (Leaflet + Icons) -->
+  https://unpkg.com/leaflet@1.9.4/dist/leaflet.css
+  https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css
 
   <style>
     :root{
       --panel-bg:#fff; --panel-br:rgba(0,0,0,.06);
       --shadow:0 10px 30px rgba(0,0,0,.15); --text:#102a43;
+      --fab-bg:#0f172a; --fab-tx:#e2e8f0;
     }
     html, body{ margin:0; height:100%; }
     #map{ width:100%; height:100%; }
+
+    /* Paneles */
     .panel{
       position:absolute; z-index:999; background:var(--panel-bg); color:var(--text);
       border:1px solid var(--panel-br); padding:14px; border-radius:14px;
       font-family:"Segoe UI", system-ui, -apple-system, Arial; box-shadow:var(--shadow);
+      transition: transform .22s ease, opacity .22s ease, visibility .22s;
     }
+    .filters{ top:12px; left:12px; width:280px; }
     .search{ top:12px; right:12px; width:300px; }
-    .filters{ top:12px; left:12px; width:260px; }
     .legend{ bottom:12px; left:12px; width:260px; }
+
     h3{ margin:0 0 10px; display:flex; align-items:center; gap:8px; font-size:16px; }
     input, select{ width:100%; padding:10px; border-radius:10px; border:1px solid #ccc; }
     button{
       width:100%; padding:11px; margin-top:8px; border:none; border-radius:10px; cursor:pointer;
       background:linear-gradient(135deg,#0078D7,#2196F3); color:#fff; font-weight:700;
     }
+    .btn-plain{ background:#f2f2f2; color:#333; }
     .dot{ width:12px; height:12px; border-radius:50%; display:inline-block; margin-right:6px; }
+
+    /* FABs (botones flotantes para abrir paneles) */
+    .fab{
+      position:absolute; z-index:1000; width:44px; height:44px;
+      background:var(--fab-bg); color:var(--fab-tx);
+      border-radius:50%; display:grid; place-items:center; cursor:pointer;
+      box-shadow:0 10px 25px rgba(0,0,0,.25); border:1px solid rgba(255,255,255,.08);
+      transition: transform .15s ease, opacity .15s ease;
+    }
+    .fab:hover{ transform: translateY(-2px); }
+    .fab-left{ left:12px; top:12px; }   /* abre filtros */
+    .fab-right{ right:12px; top:12px; }  /* abre buscar */
+
+    /* Estados oculto/visible con animación */
+    .collapsed.filters { transform: translateX(-20px); opacity:0; visibility:hidden; }
+    .collapsed.search  { transform: translateX(20px);  opacity:0; visibility:hidden; }
+
+    /* Botón cerrar dentro de panel */
+    .btn-close{
+      position:absolute; right:10px; top:10px;
+      width:28px; height:28px; border:none; border-radius:50%;
+      background:#f2f2f2; color:#333; display:grid; place-items:center; cursor:pointer;
+    }
+
+    /* Pequeños estilos leyenda fija (no colapsa) */
+    .legend p{ margin:6px 0; font-size:14px; }
   </style>
 </head>
 
 <body>
   <div id="map"></div>
 
-  <!-- BUSCAR -->
-  <div class="panel search">
-    <h3><i class="bi bi-search"></i> Buscar</h3>
-    <input id="q" placeholder="Nombre o suministro">
-    <button id="btnBuscar">Buscar</button>
-    <button id="btnLimpiar" style="background:#f2f2f2;color:#333;">Limpiar</button>
-  </div>
+  <!-- FABs para abrir -->
+  <button id="openFilters" class="fab fab-left" title="Abrir filtros">
+    <i class="bi bi-sliders"></i>
+  </button>
+  <button id="openSearch" class="fab fab-right" title="Abrir búsqueda">
+    <i class="bi bi-search"></i>
+  </button>
 
-  <!-- FILTROS -->
-  <div class="panel filters">
+  <!-- FILTROS (colapsado por defecto) -->
+  <div id="panelFilters" class="panel filters collapsed" aria-hidden="true">
+    <button class="btn-close" id="closeFilters" title="Cerrar"><i class="bi bi-x-lg"></i></button>
     <h3><i class="bi bi-sliders"></i> Filtros</h3>
-
     <label>Distrito</label>
     <select id="fDist"><option value="all">Todos</option></select>
 
-    <!-- Solo informativo (no ocultan) -->
+    <!-- Informativo (no ocultan) -->
     <div style="margin-top:10px; opacity:.85; font-size:14px;">
       <label><span class="dot" style="background:#E74C3C"></span>Supermercados Peruanos</label><br>
       <label><span class="dot" style="background:#3498DB"></span>Cencosud</label><br>
@@ -65,8 +97,17 @@
     <p id="count" style="margin-top:10px;"></p>
   </div>
 
-  <!-- LEYENDA -->
-  <div class="panel legend">
+  <!-- BUSCAR (colapsado por defecto) -->
+  <div id="panelSearch" class="panel search collapsed" aria-hidden="true">
+    <button class="btn-close" id="closeSearch" title="Cerrar"><i class="bi bi-x-lg"></i></button>
+    <h3><i class="bi bi-search"></i> Buscar</h3>
+    <input id="q" placeholder="Nombre o suministro">
+    <button id="btnBuscar">Buscar</button>
+    <button id="btnLimpiar" class="btn-plain">Limpiar</button>
+  </div>
+
+  <!-- LEYENDA (siempre visible) -->
+  <div class="panel legend" aria-hidden="false">
     <h3><i class="bi bi-info-circle"></i> Leyenda</h3>
     <p><span class="dot" style="background:#E74C3C"></span>Supermercados Peruanos</p>
     <p><span class="dot" style="background:#3498DB"></span>Cencosud</p>
@@ -76,9 +117,9 @@
     <p><span class="dot" style="background:#7F8C8D"></span>Otros</p>
   </div>
 
-  <!-- JS al final -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <!-- JS (Leaflet + PapaParse) -->
+  https://unpkg.com/leaflet@1.9.4/dist/leaflet.js</script>
+  https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js</script>
 
   <script>
   // ====== Mapa base
@@ -87,7 +128,7 @@
     attribution:"© OpenStreetMap • © CARTO"
   }).addTo(map);
 
-  // ====== Grupo de pines (sin clúster, todos visibles siempre)
+  // ====== Grupo de pines (sin clúster, todos visibles)
   const layerPins = L.layerGroup().addTo(map);
 
   // ====== Colores por cadena
@@ -100,7 +141,7 @@
     "NO ESPECIFICADO":"#7F8C8D"
   };
 
-  // ====== Icono pin SVG a color
+  // ====== Icono pin SVG
   function pinIcon(color){
     const svg = `
       <svg xmlns='http://www.w3.org/2000/svg' width='26' height='38'>
@@ -140,13 +181,12 @@
   // ====== Datos en memoria
   let PUNTOS = [];   // { mk, cli, dist, nombre, sumin }
 
-  // ====== Cargar CSV
+  // ====== Cargar CSV y dibujar pines
   Papa.parse("tiendas.csv?v="+Date.now(), {
     download:true, header:true, dynamicTyping:true, skipEmptyLines:"greedy",
     complete: function(res){
       const raw = res.data || [];
 
-      // Crear pines y añadir TODOS desde el inicio
       raw.forEach(r0 => {
         const r = normKeys(r0);
         const nombre = (r["NOMBRE"]||"").toString().trim();
@@ -165,7 +205,7 @@
            <b>Suministro:</b> ${sumin || "-"}`);
 
         PUNTOS.push({ mk, cli, dist, nombre, sumin });
-        layerPins.addLayer(mk);    // ← todos visibles desde el inicio
+        layerPins.addLayer(mk);    // todos visibles desde el inicio
       });
 
       // Contador y distritos
@@ -188,16 +228,14 @@
     }
   });
 
-  // ====== Filtrar solo por distrito (sin ocultar permanentemente)
+  // ====== Filtrar por distrito (sin ocultar por cadena)
   function aplicarDistrito(){
     const dist = document.getElementById("fDist").value;
     layerPins.clearLayers();
 
-    const visibles = (dist==="all")
-      ? PUNTOS
-      : PUNTOS.filter(p=>p.dist===dist);
-
+    const visibles = (dist==="all") ? PUNTOS : PUNTOS.filter(p=>p.dist===dist);
     visibles.forEach(p=> layerPins.addLayer(p.mk));
+
     document.getElementById("count").innerText =
       `${visibles.length} tienda${visibles.length===1?"":"s"} visible${visibles.length===1?"":"s"}`;
 
@@ -222,6 +260,41 @@
       alert("No encontrado");
     }
   }
+
+  // ====== Mostrar/Ocultar paneles con FABs y clic fuera
+  const panelFilters = document.getElementById("panelFilters");
+  const panelSearch  = document.getElementById("panelSearch");
+  const openFilters  = document.getElementById("openFilters");
+  const openSearch   = document.getElementById("openSearch");
+  const closeFilters = document.getElementById("closeFilters");
+  const closeSearch  = document.getElementById("closeSearch");
+
+  function openPanel(el){
+    el.classList.remove("collapsed");
+    el.setAttribute("aria-hidden","false");
+    setTimeout(()=>map.invalidateSize(), 180);
+  }
+  function closePanel(el){
+    el.classList.add("collapsed");
+    el.setAttribute("aria-hidden","true");
+    setTimeout(()=>map.invalidateSize(), 180);
+  }
+  openFilters.addEventListener("click", ()=> openPanel(panelFilters));
+  openSearch.addEventListener("click",  ()=> openPanel(panelSearch));
+  closeFilters.addEventListener("click",()=> closePanel(panelFilters));
+  closeSearch.addEventListener("click", ()=> closePanel(panelSearch));
+
+  // Clic fuera: cierra paneles abiertos
+  document.addEventListener("click", (e)=>{
+    const withinFilters = panelFilters.contains(e.target) || openFilters.contains(e.target);
+    const withinSearch  = panelSearch.contains(e.target)  || openSearch.contains(e.target);
+    if(!withinFilters) closePanel(panelFilters);
+    if(!withinSearch)  closePanel(panelSearch);
+  });
+
+  // Carga inicial: ambos colapsados
+  closePanel(panelFilters);
+  closePanel(panelSearch);
   </script>
 </body>
 </html>
