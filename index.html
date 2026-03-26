@@ -5,9 +5,9 @@
 <title>Mapa PRO</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<!-- ✅ CSS reales (NO BORRAR) -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<!-- ✅ CSS reales -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
 
 <style>
   :root{
@@ -25,7 +25,7 @@
     font-family:"Segoe UI"; box-shadow:var(--shadow);
     transition:.25s ease;
   }
-  .collapsed{opacity:0;visibility:hidden;transform:translateY(-10px);}
+  .collapsed{opacity:0;visibility:hidden;transform:translateY(-10px);}  
   .filters{top:80px;left:12px;width:260px;}
   .search{ top:80px;right:12px;width:260px;}
   .legend{bottom:12px;left:12px;width:240px;}
@@ -91,19 +91,17 @@
   <p><span class="dot" style="background:#7F8C8D"></span>Otros</p>
 </div>
 
-<!-- ✅ JS reales (NO BORRAR) -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+https://unpkg.com/leaflet@1.9.4/dist/leaflet.js
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
-  /* MAPA */
   const map = L.map("map").setView([-12.05,-77.05], 11);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+
   const layerPins = L.layerGroup().addTo(map);
 
-  /* COLORES */
   const COLORS = {
     "SUPERMERCADOS PERUANOS":"#E74C3C",
     "CENCOSUD":"#3498DB",
@@ -125,16 +123,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /* Normalizar */
-  function NK(r){
-    const out={};
-    for(const k in r){
-      out[k.trim().toUpperCase()] = r[k];
-    }
-    return out;
-  }
-
-  /* ✅ Detectar cadena por NOMBRE (robusto para tu CSV) */
   function stdClient(nombre){
     const n = String(nombre||"")
       .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
@@ -149,6 +137,12 @@ document.addEventListener("DOMContentLoaded", () => {
       return "SUPERMERCADOS PERUANOS";
 
     return "NO ESPECIFICADO";
+  }
+
+  function NK(r){
+    const out={};
+    for(const k in r){ out[k.trim().toUpperCase()] = r[k]; }
+    return out;
   }
 
   let PUNTOS=[];
@@ -190,7 +184,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  /* Filtrar */
   document.getElementById("fDist").onchange = ()=>{
     const dist=document.getElementById("fDist").value;
     layerPins.clearLayers();
@@ -198,7 +191,6 @@ document.addEventListener("DOMContentLoaded", () => {
     visibles.forEach(p=>layerPins.addLayer(p.mk));
   };
 
-  /* Buscar */
   document.getElementById("btnBuscar").onclick=()=>{
     const q=document.getElementById("q").value.toLowerCase();
     const hit=PUNTOS.find(p=>p.nombre.toLowerCase().includes(q)||p.sumin.includes(q));
@@ -210,7 +202,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("btnLimpiar").onclick=()=>{ document.getElementById("q").value=""; };
 
-  /* Panel slide */
   const PF=document.getElementById("panelFilters");
   const PS=document.getElementById("panelSearch");
 
