@@ -138,24 +138,26 @@ document.addEventListener("DOMContentLoaded", () => {
     return out;
   }
 
-  /* ✅ CORRECCIÓN TOTAL DE COLORES */
-  function stdClient(nombre, clienteRaw){
-    const c = String(clienteRaw || "").toUpperCase();
-    const n = String(nombre     || "").toUpperCase();
+  // Detectar cadena SOLAMENTE por el NOMBRE (robusto a mayúsculas, espacios y acentos)
+function stdClient(nombre){
+  const n = String(nombre || "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"") // quita acentos
+    .replace(/\s+/g," ")                              // colapsa espacios
+    .toUpperCase().trim();
 
-    if(c.includes("SUPERMERCADOS")) return "SUPERMERCADOS PERUANOS";
-    if(c.includes("CENCOSUD"))      return "CENCOSUD";
-    if(c.includes("TOTTUS"))        return "TOTTUS";
+  // Orden importa: busca marcas específicas primero
+  if (n.includes("TOTTUS")) return "TOTTUS";
+  if (n.includes("METRO"))  return "METRO";
+  if (n.includes("VIVANDA"))return "VIVANDA";
+  if (n.includes("WONG"))   return "CENCOSUD";
 
-    if(n.includes("METRO"))         return "METRO";
-    if(n.includes("VIVANDA"))       return "VIVANDA";
-    if(n.includes("WONG"))          return "CENCOSUD";
+  const n2 = n.replace(/\s+/g,"");
+  if (n.includes("PLAZA VEA") || n.includes("SUPER VEA") || n2.includes("PLAZAVEA") || n2.includes("SUPERVEA"))
+    return "SUPERMERCADOS PERUANOS";
 
-    if(n.includes("PLAZA VEA") || n.includes("SUPER VEA"))
-        return "SUPERMERCADOS PERUANOS";
-
-    return "NO ESPECIFICADO";
-  }
+  // Si llega aquí y no identifica marca → gris
+  return "NO ESPECIFICADO";
+}
 
   /* CARGAR CSV */
   let PUNTOS = [];
@@ -171,11 +173,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const lng    = parseFloat(r["LONGITUD"]);
         if(!lat || !lng) return;
 
-        const cliStd = stdClient(nombre, r["CLIENTE"]);
+        const cliStd = stdClient(nombre);
+``
         const color  = COLORS[cliStd];
 
         const dist = r["DISTRITO"];
-        const sumin = String(r["C.SUMIN"] || r["SUMIN"] || "").padStart(4,"0");
+        const sumin = String(r["C.SUMIN"] || r["SUMIN"] || "").padStart(4, "0");
 
         const mk = L.marker([lat,lng], {icon:pin(color)});
 
