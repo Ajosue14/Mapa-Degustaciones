@@ -105,21 +105,30 @@
 
   /* ======================= Detección por NOMBRE ======================= */
   function detectarCadenaPorNombre(nombre){
-    const n = String(nombre||"")
-      .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-      .replace(/\s+/g," ").trim().toUpperCase();
+  const n = String(nombre||"")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")     // quita acentos
+    .replace(/[^A-Za-z0-9 ]/g," ")      // quita símbolos raros
+    .replace(/\s+/g," ")                // colapsa espacios
+    .trim()
+    .toUpperCase();
 
-    // 🔴 SP: literal o marcas
-    if(n.includes("SUPERMERCADOS PERUANOS")) return "SUPERMERCADOS PERUANOS";
-    if(n.includes("PLAZA VEA") || n.includes("SUPER VEA") || n.includes("HIPER PLAZA VEA")) return "SUPERMERCADOS PERUANOS";
-    // 🔵
-    if(n.includes("WONG"))   return "CENCOSUD";
-    // 🟡 🟠 🟢
-    if(n.includes("METRO"))  return "METRO";
-    if(n.includes("VIVANDA"))return "VIVANDA";
-    if(n.includes("TOTTUS")) return "TOTTUS";
-    return "NO ESPECIFICADO";
-  }
+  // ✅ Supermercados Peruanos
+  if(n.includes("SUPERMERCADOS PERUANOS")) return "SUPERMERCADOS PERUANOS";
+  if(n.includes("PLAZA VEA") || n.includes("SUPER VEA") || n.includes("HIPER PLAZA VEA"))
+    return "SUPERMERCADOS PERUANOS";
+
+  // ✅ Cencosud (Wong + cualquier nombre con CENCOSUD)
+  if(n.includes("WONG")) return "CENCOSUD";
+  if(n.includes("CENCOSUD")) return "CENCOSUD";
+
+  // ✅ Metro / Vivanda / Tottus
+  if(n.includes("METRO")) return "METRO";
+  if(n.includes("VIVANDA")) return "VIVANDA";
+  if(n.includes("TOTTUS")) return "TOTTUS";
+
+  return "NO ESPECIFICADO";
+}
 
   /* ======================= Normalizar claves ======================= */
   function NK(row){
