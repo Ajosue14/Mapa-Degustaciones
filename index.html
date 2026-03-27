@@ -49,10 +49,43 @@
         <option value="NO ESPECIFICADO">Otros</option>
       </select>
     </div>
+<div class="row">
+  <label><b>Nombre de tienda</b></label>
+  <input id="fNombre" placeholder="Escribe y presiona Enter o espera 0.4s"/>
+</div>
 
-    <div class="row">
-      <label><b>Nombre de tienda</b> (ej. “plaza vea”, “wong”, “san isidro”)</label>
-      <input id="fNombre" placeholder="Escribe y presiona Enter o espera 0.4s"/>
+<div class="row" style="margin-top:10px;">
+  <b id="contador">Tiendas visibles: 0</b>
+</div>
+
+<div class="row" style="margin-top:8px;">
+  <button id="btnReset" style="
+    width:100%;
+    padding:10px;
+    background:#f2f2f2;
+    border:1px solid #ccc;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:bold;
+  ">
+    Borrar filtros
+  </button>
+</div>
+``
+
+<div class="row" style="margin-top:8px;">
+  <button id="btnReset" style="
+    width:100%;
+    padding:10px;
+    background:#f2f2f2;
+    border:1px solid #ccc;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:bold;
+  ">
+    Borrar filtros
+  </button>
+</div>
     </div>
   </div>
 
@@ -91,17 +124,21 @@
     "NO ESPECIFICADO":"#7F8C8D"
   };
 
-  function pin(color){
-    const svg = `
-    <svg xmlns='http://www.w3.org/2000/svg' width='26' height='38'>
-      <path d='M13 0C5.8 0 0 5.8 0 13c0 10 13 25 13 25s13-15 13-25C26 5.8 20.2 0 13 0z' fill='${color}'/>
-      <circle cx='13' cy='13' r='6' fill='white'/>
-    </svg>`;
-    return L.icon({
-      iconUrl:"data:image/svg+xml;utf8,"+encodeURIComponent(svg),
-      iconSize:[26,38],iconAnchor:[13,38],popupAnchor:[0,-30]
-    });
-  }
+  function pin(color, scale = 0.7){
+  const svg = `
+  <svg xmlns='http://www.w3.org/2000/svg' width='26' height='38'>
+    <path d='M13 0C5.8 0 0 5.8 0 13c0 10 13 25 13 25s13-15 13-25C26 5.8 20.2 0 13 0z' fill='${color}'/>
+    <circle cx='13' cy='13' r='6' fill='white'/>
+  </svg>`;
+
+  return L.icon({
+    iconUrl:"data:image/svg+xml;utf8,"+encodeURIComponent(svg),
+    iconSize:[26*scale,38*scale],
+    iconAnchor:[13*scale,38*scale],
+    popupAnchor:[0,-20*scale]
+  });
+}
+``
 
   /* ======================= Detección por NOMBRE ======================= */
   function detectarCadenaPorNombre(nombre){
@@ -169,13 +206,34 @@
         const cli = detectarCadenaPorNombre(nombre);
         const color = COLORS[cli] || COLORS["NO ESPECIFICADO"];
 
-        const mk = L.marker([lat,lng], {icon:pin(color), title:nombre});
-        mk.bindPopup(
-          `<b>${nombre}</b><br>
-           <b>Cadena:</b> ${cli}<br>
-           <b>Distrito:</b> ${dist || "-"}<br>
-           <b>Sumin:</b> ${sumin || "-"}`
-        );
+        // iconos (pequeño por defecto, grande al hover)
+const iconSmall = pin(color, 0.7);
+const iconBig   = pin(color, 1.1);
+
+// crear marcador
+const mk = L.marker([lat,lng], {
+  icon: iconSmall,
+  title: nombre
+});
+
+// efecto hover
+mk.on("mouseover", () => {
+  mk.setIcon(iconBig);
+  mk.setZIndexOffset(1000);
+});
+
+mk.on("mouseout", () => {
+  mk.setIcon(iconSmall);
+  mk.setZIndexOffset(0);
+});
+
+// popup
+mk.bindPopup(
+  `<b>${nombre}</b><br>
+   <b>Cadena:</b> ${cli}<br>
+   <b>Distrito:</b> ${dist || "-"}<br>
+   <b>Sumin:</b> ${sumin || "-"}`
+);
 
         ALL_POINTS.push({mk, nombre, dist, cli});
         layerPins.addLayer(mk);
@@ -206,29 +264,32 @@
   });
 
   /* ======================= FILTROS ======================= */
-  function aplicarFiltros(){
-    const dist = document.getElementById("fDist").value;
-    const cad  = document.getElementById("fCadena").value;
-    const q    = document.getElementById("fNombre").value.toLowerCase().trim();
+function aplicarFiltros(){
+  const dist = document.getElementById("fDist").value;
+  const cad  = document.getElementById("fCadena").value;
+  const q    = document.getElementById("fNombre").value.toLowerCase().trim();
 
-    layerPins.clearLayers();
+  layerPins.clearLayers();
 
-    const visibles = ALL_POINTS.filter(p=>{
-      const okD = (dist==="all") || (p.dist===dist);
-      const okC = (cad ==="all") || (p.cli===cad);
-      const okN = !q || p.nombre.toLowerCase().includes(q);
-      return okD && okC && okN;
-    });
+  const visibles = ALL_POINTS.filter(p=>{
+    const okD = (dist==="all") || (p.dist===dist);
+    const okC = (cad==="all") || (p.cli===cad);
+    const okN = !q || p.nombre.toLowerCase().includes(q);
+    return okD && okC && okN;
+  });
 
-    visibles.forEach(p=>layerPins.addLayer(p.mk));
+  visibles.forEach(p=>layerPins.addLayer(p.mk));
 
-    if(visibles.length){
-      const g = L.featureGroup(visibles.map(p=>p.mk));
-      map.fitBounds(g.getBounds().pad(0.2));
-    }
+  if(visibles.length){
+    const g = L.featureGroup(visibles.map(p=>p.mk));
+    map.fitBounds(g.getBounds().pad(0.2));
   }
-  document.getElementById("fDist").onchange = aplicarFiltros;
-  document.getElementById("fCadena").onchange = aplicarFiltros;
+
+  // ✅ AQUÍ VA EL CONTADOR (PASO 4)
+  document.getElementById("contador").innerText =
+    `Tiendas visibles: ${visibles.length}`;
+}
+`` 
   (()=>{
     const input = document.getElementById("fNombre");
     let t=null;
