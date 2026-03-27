@@ -1,4 +1,23 @@
-<!DOCTYPE html>
+<!DOCTYPE html>input", ()=>{
+      clearTimeout(t); t = setTimeout(aplicarFiltros, 400);
+    });
+  })();
+
+  // Botón borrar filtros
+  document.getElementById("btnReset").onclick = ()=>{
+    document.getElementById("fDist").value   = "all";
+    document.getElementById("fCadena").value = "all";
+    document.getElementById("fNombre").value = "";
+    aplicarFiltros();
+    if(ALL_POINTS.length){
+      const g = L.featureGroup(ALL_POINTS.map(p=>p.mk));
+      map.fitBounds(g.getBounds().pad(0.2));
+    }
+  };
+  </script>
+</body>
+</html>
+``
 <html lang="es">
 <head>
   <meta charset="utf-8" />
@@ -24,8 +43,8 @@
     .row{margin-top:8px;}
   </style>
 </head>
-
 <body>
+
   <div id="map"></div>
 
   <!-- PANEL FILTROS -->
@@ -49,43 +68,27 @@
         <option value="NO ESPECIFICADO">Otros</option>
       </select>
     </div>
-<div class="row">
-  <label><b>Nombre de tienda</b></label>
-  <input id="fNombre" placeholder="Escribe y presiona Enter o espera 0.4s"/>
-</div>
 
-<div class="row" style="margin-top:10px;">
-  <b id="contador">Tiendas visibles: 0</b>
-</div>
+    <div class="row">
+      <label><b>Nombre de tienda</b></label>
+      <input id="fNombre" placeholder="Escribe y presiona Enter o espera 0.4s"/>
+    </div>
 
-<div class="row" style="margin-top:8px;">
-  <button id="btnReset" style="
-    width:100%;
-    padding:10px;
-    background:#f2f2f2;
-    border:1px solid #ccc;
-    border-radius:10px;
-    cursor:pointer;
-    font-weight:bold;
-  ">
-    Borrar filtros
-  </button>
-</div>
-``
+    <div class="row" style="margin-top:10px;">
+      <b id="contador">Tiendas visibles: 0</b>
+    </div>
 
-<div class="row" style="margin-top:8px;">
-  <button id="btnReset" style="
-    width:100%;
-    padding:10px;
-    background:#f2f2f2;
-    border:1px solid #ccc;
-    border-radius:10px;
-    cursor:pointer;
-    font-weight:bold;
-  ">
-    Borrar filtros
-  </button>
-</div>
+    <div class="row" style="margin-top:8px;">
+      <button id="btnReset" style="
+        width:100%;
+        padding:10px;
+        background:#f2f2f2;
+        border:1px solid #ccc;
+        border-radius:10px;
+        cursor:pointer;
+        font-weight:bold;">
+        Borrar filtros
+      </button>
     </div>
   </div>
 
@@ -100,7 +103,7 @@
     <p><span class="dot" style="background:#7F8C8D"></span>Otros</p>
   </div>
 
-  <!-- ✅ SCRIPTS REALES (estas dos líneas SON CRÍTICAS) -->
+  <!-- ✅ SCRIPTS REALES -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
@@ -124,48 +127,47 @@
     "NO ESPECIFICADO":"#7F8C8D"
   };
 
+  // Pin SVG con escala
   function pin(color, scale = 0.7){
-  const svg = `
-  <svg xmlns='http://www.w3.org/2000/svg' width='26' height='38'>
-    <path d='M13 0C5.8 0 0 5.8 0 13c0 10 13 25 13 25s13-15 13-25C26 5.8 20.2 0 13 0z' fill='${color}'/>
-    <circle cx='13' cy='13' r='6' fill='white'/>
-  </svg>`;
-
-  return L.icon({
-    iconUrl:"data:image/svg+xml;utf8,"+encodeURIComponent(svg),
-    iconSize:[26*scale,38*scale],
-    iconAnchor:[13*scale,38*scale],
-    popupAnchor:[0,-20*scale]
-  });
-}
-``
+    const svg = `
+      <svg xmlns='http://www.w3.org/2000/svg' width='26' height='38'>
+        <path d='M13 0C5.8 0 0 5.8 0 13c0 10 13 25 13 25s13-15 13-25C26 5.8 20.2 0 13 0z' fill='${color}'/>
+        <circle cx='13' cy='13' r='6' fill='white'/>
+      </svg>`;
+    return L.icon({
+      iconUrl:"data:image/svg+xml;utf8,"+encodeURIComponent(svg),
+      iconSize:[26*scale,38*scale],
+      iconAnchor:[13*scale,38*scale],
+      popupAnchor:[0,-20*scale]
+    });
+  }
 
   /* ======================= Detección por NOMBRE ======================= */
   function detectarCadenaPorNombre(nombre){
-  const n = String(nombre||"")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g,"")     // quita acentos
-    .replace(/[^A-Za-z0-9 ]/g," ")      // quita símbolos raros
-    .replace(/\s+/g," ")                // colapsa espacios
-    .trim()
-    .toUpperCase();
+    const n = String(nombre||"")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g,"")   // quita acentos
+      .replace(/[^A-Za-z0-9 ]/g," ")    // quita símbolos raros
+      .replace(/\s+/g," ")              // colapsa espacios
+      .trim()
+      .toUpperCase();
 
-  // ✅ Supermercados Peruanos
-  if(n.includes("SUPERMERCADOS PERUANOS")) return "SUPERMERCADOS PERUANOS";
-  if(n.includes("PLAZA VEA") || n.includes("SUPER VEA") || n.includes("HIPER PLAZA VEA"))
-    return "SUPERMERCADOS PERUANOS";
+    // SP
+    if(n.includes("SUPERMERCADOS PERUANOS")) return "SUPERMERCADOS PERUANOS";
+    if(n.includes("PLAZA VEA") || n.includes("SUPER VEA") || n.includes("HIPER PLAZA VEA"))
+      return "SUPERMERCADOS PERUANOS";
 
-  // ✅ Cencosud (Wong + cualquier nombre con CENCOSUD)
-  if(n.includes("WONG")) return "CENCOSUD";
-  if(n.includes("CENCOSUD")) return "CENCOSUD";
+    // Cencosud
+    if(n.includes("WONG")) return "CENCOSUD";
+    if(n.includes("CENCOSUD")) return "CENCOSUD";
 
-  // ✅ Metro / Vivanda / Tottus
-  if(n.includes("METRO")) return "METRO";
-  if(n.includes("VIVANDA")) return "VIVANDA";
-  if(n.includes("TOTTUS")) return "TOTTUS";
+    // Metro / Vivanda / Tottus
+    if(n.includes("METRO"))  return "METRO";
+    if(n.includes("VIVANDA"))return "VIVANDA";
+    if(n.includes("TOTTUS")) return "TOTTUS";
 
-  return "NO ESPECIFICADO";
-}
+    return "NO ESPECIFICADO";
+  }
 
   /* ======================= Normalizar claves ======================= */
   function NK(row){
@@ -192,7 +194,7 @@
       const cadenas   = new Set();
       const marcadores = [];
 
-      (res.data||[]).forEach(row=>{
+      (res.data || []).forEach(row=>{
         const R = NK(row);
 
         const nombre = getCol(R, ["NOMBRE","Nombre"]);
@@ -203,104 +205,93 @@
 
         if(!Number.isFinite(lat) || !Number.isFinite(lng)) return;
 
-        const cli = detectarCadenaPorNombre(nombre);
+        const cli   = detectarCadenaPorNombre(nombre);
         const color = COLORS[cli] || COLORS["NO ESPECIFICADO"];
 
-        // iconos (pequeño por defecto, grande al hover)
-const iconSmall = pin(color, 0.7);
-const iconBig   = pin(color, 1.1);
+        // Iconos (pequeño por defecto, grande al hover)
+        const iconSmall = pin(color, 0.7);
+        const iconBig   = pin(color, 1.1);
 
-// crear marcador
-const mk = L.marker([lat,lng], {
-  icon: iconSmall,
-  title: nombre
-});
+        // Crear marcador
+        const mk = L.marker([lat,lng], { icon: iconSmall, title:nombre });
 
-// efecto hover
-mk.on("mouseover", () => {
-  mk.setIcon(iconBig);
-  mk.setZIndexOffset(1000);
-});
+        // Efecto hover
+        mk.on("mouseover", () => { mk.setIcon(iconBig); mk.setZIndexOffset(1000); });
+        mk.on("mouseout",  () => { mk.setIcon(iconSmall); mk.setZIndexOffset(0);   });
 
-mk.on("mouseout", () => {
-  mk.setIcon(iconSmall);
-  mk.setZIndexOffset(0);
-});
-
-// popup
-mk.bindPopup(
-  `<b>${nombre}</b><br>
-   <b>Cadena:</b> ${cli}<br>
-   <b>Distrito:</b> ${dist || "-"}<br>
-   <b>Sumin:</b> ${sumin || "-"}`
-);
+        // Popup
+        mk.bindPopup(
+          `<b>${nombre}</b><br>
+           <b>Cadena:</b> ${cli}<br>
+           <b>Distrito:</b> ${dist || "-"}<br>
+           <b>Sumin:</b> ${sumin || "-"}`
+        );
 
         ALL_POINTS.push({mk, nombre, dist, cli});
         layerPins.addLayer(mk);
         marcadores.push(mk);
 
-        if(dist) distritos.add(dist);
-        cadenas.add(cli);
+        if(dist) cadenas.add(cli), distritos.add(dist);
       });
 
-      // Filtro Distritos
+      // Cargar opciones de Distrito
       document.getElementById("fDist").innerHTML =
         `<option value="all">Todos</option>` + [...distritos].sort().map(d=>`<option>${d}</option>`).join("");
 
-      // Filtro Cadenas dinámico
+      // Cargar opciones de Cadena (dinámico, respetando orden deseado)
       const orden = ["SUPERMERCADOS PERUANOS","CENCOSUD","TOTTUS","METRO","VIVANDA","NO ESPECIFICADO"];
       document.getElementById("fCadena").innerHTML =
         `<option value="all">Todas</option>` +
         orden.filter(c=>cadenas.has(c))
              .map(c=>`<option value="${c}">${c==="NO ESPECIFICADO"?"Otros":c}</option>`).join("");
 
-      // Ajustar mapa
+      // Ajustar mapa inicial
       if(marcadores.length){
         const g = L.featureGroup(marcadores);
         map.fitBounds(g.getBounds().pad(0.2));
       }
+
+      // Contador inicial
+      document.getElementById("contador").innerText =
+        `Tiendas visibles: ${ALL_POINTS.length}`;
     },
     error:(err)=>{ console.error("PapaParse error:", err); alert("No se pudo leer tiendas.csv"); }
   });
 
   /* ======================= FILTROS ======================= */
-function aplicarFiltros(){
-  const dist = document.getElementById("fDist").value;
-  const cad  = document.getElementById("fCadena").value;
-  const q    = document.getElementById("fNombre").value.toLowerCase().trim();
+  function aplicarFiltros(){
+    const dist = document.getElementById("fDist").value;
+    const cad  = document.getElementById("fCadena").value;
+    const q    = document.getElementById("fNombre").value.toLowerCase().trim();
 
-  layerPins.clearLayers();
+    layerPins.clearLayers();
 
-  const visibles = ALL_POINTS.filter(p=>{
-    const okD = (dist==="all") || (p.dist===dist);
-    const okC = (cad==="all") || (p.cli===cad);
-    const okN = !q || p.nombre.toLowerCase().includes(q);
-    return okD && okC && okN;
-  });
+    const visibles = ALL_POINTS.filter(p=>{
+      const okD = (dist==="all") || (p.dist===dist);
+      const okC = (cad==="all") || (p.cli===cad);
+      const okN = !q || p.nombre.toLowerCase().includes(q);
+      return okD && okC && okN;
+    });
 
-  visibles.forEach(p=>layerPins.addLayer(p.mk));
+    visibles.forEach(p=>layerPins.addLayer(p.mk));
 
-  if(visibles.length){
-    const g = L.featureGroup(visibles.map(p=>p.mk));
-    map.fitBounds(g.getBounds().pad(0.2));
+    if(visibles.length){
+      const g = L.featureGroup(visibles.map(p=>p.mk));
+      map.fitBounds(g.getBounds().pad(0.2));
+    }
+
+    // Contador dinámico
+    document.getElementById("contador").innerText =
+      `Tiendas visibles: ${visibles.length}`;
   }
 
-  // ✅ AQUÍ VA EL CONTADOR (PASO 4)
-  document.getElementById("contador").innerText =
-    `Tiendas visibles: ${visibles.length}`;
-}
-`` 
-  (()=>{
+  // Listeners: selects y búsqueda con debounce
+  document.getElementById("fDist").onchange   = aplicarFiltros;
+  document.getElementById("fCadena").onchange = aplicarFiltros;
+
+  (()=>{ // nombre: Enter o 0.4s
     const input = document.getElementById("fNombre");
     let t=null;
     input.addEventListener("keydown", e=>{
       if(e.key==="Enter"){ e.preventDefault(); aplicarFiltros(); }
     });
-    input.addEventListener("input", ()=>{
-      clearTimeout(t); t = setTimeout(aplicarFiltros, 400);
-    });
-  })();
-  </script>
-</body>
-</html>
-``
